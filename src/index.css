@@ -1,0 +1,158 @@
+@import "tailwindcss";
+
+@theme {
+  --font-dot: "Doto", "Silkscreen", "DotGothic16", ui-monospace, monospace;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --color-ink: #000000;
+  --color-paper: #ffffff;
+  --color-mute: #a0a0a0;
+  --color-dim: #5a5a5a;
+  --color-card: #101010;
+  --color-card-2: #171717;
+  --color-line: #262626;
+  --color-nred: #ff0000;
+
+  --animate-dot-pulse: dot-pulse 1s ease-in-out infinite;
+  --animate-ms-motion: ms-motion 0.35s ease-in-out infinite alternate;
+  --animate-fade-up: fade-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-blink-slow: blink-slow 2s steps(1) infinite;
+
+  @keyframes dot-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.7);
+      opacity: 0.55;
+    }
+  }
+  @keyframes ms-motion {
+    from {
+      filter: blur(0.3px);
+      opacity: 0.55;
+    }
+    to {
+      filter: blur(0.9px);
+      opacity: 0.85;
+    }
+  }
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes blink-slow {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.25;
+    }
+  }
+}
+
+:root {
+  color-scheme: dark;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  background: #000;
+  color: #fff;
+  font-family: var(--font-sans);
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+/* Dot matrix display font — round dots, heavy weight like NDot55 */
+.font-dot {
+  font-family: var(--font-dot);
+  font-variation-settings: "ROND" 100;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+/* Fixed-width numerals: prevents layout shift ("blinking") on fast counters */
+.tnum {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* Milliseconds: constant, subtle blur to imply motion — never toggles per frame */
+.ms-motion {
+  animation: var(--animate-ms-motion);
+  will-change: filter, opacity;
+}
+.ms-still {
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ms-motion {
+    animation: none;
+    opacity: 0.6;
+    filter: none;
+  }
+}
+
+/* Micro labels */
+.label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-mute);
+}
+
+/* Hide scrollbars but keep scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Native inputs – dark, borderless */
+input[type="date"],
+input[type="time"],
+input[type="text"],
+input[type="number"] {
+  color-scheme: dark;
+  appearance: none;
+  -webkit-appearance: none;
+}
+input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.7;
+}
+
+/* Safe areas */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* GPU compositing hint for high-frequency text */
+.live {
+  contain: content;
+  transform: translateZ(0);
+}
