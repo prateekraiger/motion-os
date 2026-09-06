@@ -42,6 +42,67 @@ export function Label({ children, className, red }: { children: ReactNode; class
   );
 }
 
+export function PageIntro({
+  eyebrow,
+  title,
+  description,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="px-2 pb-2 pt-4">
+      <Label red>{eyebrow}</Label>
+      <h1 className="font-dot mt-4 max-w-[12ch] text-[34px] leading-[0.98] text-paper">{title}</h1>
+      <p className="mt-3 max-w-[38ch] text-[13px] leading-relaxed text-mute">{description}</p>
+      {children}
+    </div>
+  );
+}
+
+export function ActionButton({
+  children,
+  onClick,
+  disabled = false,
+  secondary = false,
+  className,
+}: {
+  children: ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  secondary?: boolean;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "inline-flex min-h-11 items-center justify-center rounded-full px-4 text-[10px] font-semibold uppercase tracking-[0.16em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/80 disabled:cursor-not-allowed disabled:opacity-50",
+        secondary
+          ? "border border-white/[0.12] bg-white/[0.04] text-paper hover:bg-white/[0.1] active:scale-[0.98]"
+          : "bg-paper text-ink hover:bg-white/85 active:scale-[0.98]",
+        className,
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function StatusPill({ children, red = false }: { children: ReactNode; red?: boolean }) {
+  return (
+    <span className={cn("inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-medium uppercase tracking-[0.16em]", red ? "border-nred/40 text-nred" : "border-white/[0.1] text-mute")}>
+      <span className={cn("h-1.5 w-1.5 rounded-full", red ? "bg-nred animate-dot-pulse" : "bg-mute")} />
+      {children}
+    </span>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Fixed-width numeric display – prevents jitter/blink                 */
 /* ------------------------------------------------------------------ */
@@ -206,6 +267,7 @@ export function Segmented<T extends string>({
       {options.map((o) => (
         <button
           key={o.value}
+          type="button"
           role="tab"
           aria-selected={value === o.value}
           onClick={() => onChange(o.value)}
@@ -227,6 +289,7 @@ export function Segmented<T extends string>({
 export function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
   return (
     <button
+      type="button"
       role="switch"
       aria-checked={checked}
       aria-label={label}

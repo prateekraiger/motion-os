@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSettings, type YearView } from "../hooks/useSettings";
 import { parseLocal, toDateInput, toTimeInput } from "../lib/time";
-import { Widget, Label, Toggle, Segmented } from "./ui";
+import { Widget, Label, Toggle, Segmented, PageIntro, StatusPill } from "./ui";
 import { cn } from "../utils/cn";
 
 function Row({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
@@ -35,7 +35,11 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
 
   const parsed = parseLocal(date, time);
   const valid = !!parsed && parsed.getTime() <= Date.now();
-  const dirty = name !== settings.name || (parsed && birthDate && parsed.getTime() !== birthDate.getTime()) || (parsed && !birthDate);
+  const dirty = Boolean(
+    name !== settings.name ||
+      (parsed && birthDate && parsed.getTime() !== birthDate.getTime()) ||
+      (parsed && !birthDate),
+  );
 
   const save = () => {
     if (!valid || !parsed) return;
@@ -45,6 +49,17 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
 
   return (
     <div className="flex flex-col gap-3 animate-fade-up">
+      <PageIntro
+        eyebrow="Preferences"
+        title="Make it yours"
+        description="Tune the way Motion OS looks and counts. Changes are saved locally and mirrored to your Android widgets."
+      >
+        <div className="mt-4 flex flex-wrap gap-2">
+          <StatusPill>Stored locally</StatusPill>
+          <StatusPill>Nothing to sign in</StatusPill>
+        </div>
+      </PageIntro>
+
       <Widget className="pt-6">
         <Label red>Profile</Label>
         <div className="mt-4 space-y-3">
@@ -64,6 +79,7 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
           </div>
           {!valid && date && <div className="text-[11px] text-nred">Enter a valid date in the past.</div>}
           <button
+            type="button"
             onClick={save}
             disabled={!valid || !dirty}
             className={cn(
@@ -141,10 +157,11 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
           <Row title="Reset Motion OS" sub="Clears your profile and preferences from this device.">
             {confirm ? (
               <div className="flex gap-2">
-                <button onClick={() => setConfirm(false)} className="rounded-full border border-line px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-mute">
+                <button type="button" onClick={() => setConfirm(false)} className="rounded-full border border-line px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-mute">
                   No
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     reset();
                     setConfirm(false);
@@ -156,7 +173,7 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
                 </button>
               </div>
             ) : (
-              <button onClick={() => setConfirm(true)} className="rounded-full border border-nred/60 px-4 py-2 text-[10px] uppercase tracking-[0.16em] text-nred">
+              <button type="button" onClick={() => setConfirm(true)} className="rounded-full border border-nred/60 px-4 py-2 text-[10px] uppercase tracking-[0.16em] text-nred">
                 Reset
               </button>
             )}

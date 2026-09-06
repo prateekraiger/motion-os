@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { syncNativeWidgetSettings } from "../lib/nativeWidgets";
 
 export type YearView = "dots" | "bar";
 
@@ -29,7 +30,8 @@ function load(): Settings {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return DEFAULTS;
-    return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<Settings>) };
+    const parsed = JSON.parse(raw) as Partial<Settings>;
+    return { ...DEFAULTS, ...parsed };
   } catch {
     return DEFAULTS;
   }
@@ -53,10 +55,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore quota errors */
     }
+
+    // AppWidgetProvider cannot read a WebView's localStorage. Mirror only the
+    // minimum display data into native SharedPreferences on Android.
+    void syncNativeWidgetSettings(settings);
   }, [settings]);
 
   const update = useCallback((patch: Partial<Settings>) => setSettings((s) => ({ ...s, ...patch })), []);
-  const reset = useCallback(() => setSettings(DEFAULTS), []);
+  const reset = useCallback(() => setSettings({ ...DEFAULTS }), []);
 
   const birthDate = useMemo(() => {
     if (!settings.birth) return null;

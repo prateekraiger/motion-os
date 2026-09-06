@@ -11,7 +11,7 @@ import {
   fmtDate,
   MS,
 } from "../lib/time";
-import { Widget, Label, Num, DotBar, DotGrid, DotRing, StatRow, GlyphDots } from "./ui";
+import { Widget, Label, Num, DotBar, DotGrid, DotRing, StatRow, GlyphDots, PageIntro, StatusPill } from "./ui";
 import { cn } from "../utils/cn";
 
 function Cell({ value, label, className }: { value: string; label: string; className?: string }) {
@@ -47,11 +47,22 @@ export default function AgeModule() {
   const lifeExp = settings.lifeExpectancy;
   const lifeFraction = Math.min(1, age.decimalYears / lifeExp);
 
-  const birthdayIsToday = nb.remainingMs > 364 * MS.day;
+  const birthdayIsToday = nb.isToday;
   const msClass = settings.motionBlur ? "ms-motion" : "ms-still";
 
   return (
     <div className="flex flex-col gap-3 animate-fade-up">
+      <PageIntro
+        eyebrow="Life clock"
+        title={settings.name ? `${settings.name}'s life in motion` : "Your life in motion"}
+        description="A live count of the time you have already lived. The small numbers are the point: notice where you are, not just how old you are."
+      >
+        <div className="mt-4 flex flex-wrap gap-2">
+          <StatusPill red>Live now</StatusPill>
+          <StatusPill>Private on device</StatusPill>
+        </div>
+      </PageIntro>
+
       {/* HERO */}
       <Widget className="pt-6">
         <div className="flex items-start justify-between">

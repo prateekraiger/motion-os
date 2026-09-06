@@ -13,7 +13,7 @@ import {
   MONTHS_SHORT,
   DAYS_SHORT,
 } from "../lib/time";
-import { Widget, Label, Num, DotBar, DotGrid, DotRing, Segmented, GlyphDots } from "./ui";
+import { Widget, Label, Num, DotBar, DotGrid, DotRing, Segmented, GlyphDots, PageIntro, StatusPill } from "./ui";
 import { cn } from "../utils/cn";
 
 function RingWidget({ label, fraction, caption }: { label: string; fraction: number; caption: string }) {
@@ -47,6 +47,17 @@ export default function YearModule() {
 
   return (
     <div className="flex flex-col gap-3 animate-fade-up">
+      <PageIntro
+        eyebrow="Year clock"
+        title="Make this year visible"
+        description="A calm, precise view of the year you are in. See today in context, then choose what deserves your attention next."
+      >
+        <div className="mt-4 flex flex-wrap gap-2">
+          <StatusPill red>{yp.daysRemaining === 0 ? "Year complete" : `${yp.daysRemaining} days left`}</StatusPill>
+          <StatusPill>Live progress</StatusPill>
+        </div>
+      </PageIntro>
+
       {/* HERO */}
       <Widget className="pt-6">
         <div className="flex items-start justify-between">
