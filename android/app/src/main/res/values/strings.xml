@@ -1,7 +1,11 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">motion-os</string>
-    <string name="title_activity_main">motion-os</string>
-    <string name="package_name">com.example.motionos</string>
-    <string name="custom_url_scheme">com.example.motionos</string>
+    <string name="app_name">Motion OS</string>
+    <string name="title_activity_main">Motion OS</string>
+    <string name="package_name">com.motionos.app</string>
+    <string name="custom_url_scheme">com.motionos.app</string>
+    <string name="age_widget_name">Age in motion</string>
+    <string name="age_widget_description">A live view of the time you have lived.</string>
+    <string name="year_widget_name">Year in motion</string>
+    <string name="year_widget_description">A live view of this year in progress.</string>
 </resources>

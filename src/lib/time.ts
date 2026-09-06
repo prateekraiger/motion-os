@@ -158,6 +158,9 @@ export function nextBirthday(birth: Date, nowDate: Date) {
     remainingMs,
     fraction,
     percent: fraction * 100,
+    isToday:
+      birth.getMonth() === nowDate.getMonth() &&
+      Math.min(birth.getDate(), daysInMonth(nowDate.getFullYear(), birth.getMonth())) === nowDate.getDate(),
   };
 }
 
@@ -252,13 +255,25 @@ export function fmtTime(d: Date, h24 = true) {
   return `${pad(h)}:${pad(d.getMinutes())}${suffix}`;
 }
 
-/** Parse "YYYY-MM-DD" + "HH:MM" as local time */
+/** Parse "YYYY-MM-DD" + "HH:MM" as local time without normalising invalid dates. */
 export function parseLocal(date: string, time: string): Date | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
   const [y, m, d] = date.split("-").map(Number);
-  const [hh, mm] = /^\d{2}:\d{2}$/.test(time) ? time.split(":").map(Number) : [0, 0];
-  const dt = new Date(y, m - 1, d, hh, mm, 0, 0);
-  return isNaN(dt.getTime()) ? null : dt;
+  const timeMatch = time ? /^(\d{2}):(\d{2})$/.exec(time) : null;
+  if (time && !timeMatch) return null;
+  const hh = timeMatch ? Number(timeMatch[1]) : 0;
+  const mm = timeMatch ? Number(timeMatch[2]) : 0;
+  if (m < 1 || m > 12 || d < 1 || d > 31 || hh > 23 || mm > 59) return null;
+
+  // Date(year, ...) treats years 0–99 as 1900–1999. Starting from an epoch
+  // and using setFullYear keeps the browser input's four-digit year intact.
+  const dt = new Date(0);
+  dt.setFullYear(y, m - 1, d);
+  dt.setHours(hh, mm, 0, 0);
+  if (isNaN(dt.getTime())) return null;
+  return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d && dt.getHours() === hh && dt.getMinutes() === mm
+    ? dt
+    : null;
 }
 
 export function toDateInput(d: Date) {

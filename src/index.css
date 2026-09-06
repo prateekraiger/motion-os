@@ -77,6 +77,26 @@ body {
 
 body {
   min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+::selection {
+  background: #fff;
+  color: #000;
+}
+
+:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
 }
 
 /* Dot matrix display font — round dots, heavy weight like NDot55 */
@@ -103,8 +123,13 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ms-motion {
+  .ms-motion,
+  .animate-dot-pulse,
+  .animate-fade-up {
     animation: none;
+  }
+
+  .ms-motion {
     opacity: 0.6;
     filter: none;
   }

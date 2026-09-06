@@ -1,9 +1,12 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'com.example.motionos',
-  appName: 'motion-os',
-  webDir: 'dist'
+  appId: "com.motionos.app",
+  appName: "Motion OS",
+  webDir: "dist",
+  android: {
+    backgroundColor: "#000000",
+  },
 };
 
 export default config;
