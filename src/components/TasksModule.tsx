@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStore } from "../hooks/useStore";
 import { useSettings } from "../hooks/useSettings";
-import { isOverdue, sortTasks } from "../lib/productivity";
-import { dateKey, relativeDay } from "../lib/time";
-import type { Priority, Task } from "../lib/types";
+import { isOverdue, sortTasks, tasksCompletedOn } from "../lib/productivity";
+import { dateKey, fmtTime, parseLocal, relativeDay, toDateInput, toTimeInput } from "../lib/time";
+import type { Priority, Repeat, Task } from "../lib/types";
 import {
   Checkbox,
   Chip,
@@ -16,27 +16,47 @@ import {
   StatusPill,
   Widget,
 } from "./ui";
-import { CalendarIcon, ListIcon, PlusIcon, TrashIcon } from "./icons";
+import {
+  CalendarIcon,
+  ChevronDown,
+  ClockIcon,
+  ListIcon,
+  NoteIcon,
+  PlusIcon,
+  RepeatIcon,
+  SearchIcon,
+  TrashIcon,
+} from "./icons";
 import { cn } from "../utils/cn";
 
 type Filter = "today" | "upcoming" | "all" | "done";
 
 const PRIORITY_LABEL: Record<Priority, string> = { high: "High", med: "Med", low: "Low" };
 const PRIORITY_CYCLE: Priority[] = ["med", "high", "low"];
+const REPEAT_OPTIONS: [Repeat, string][] = [
+  ["none", "None"],
+  ["daily", "Daily"],
+  ["weekly", "Weekly"],
+];
+
+const panelInputCls =
+  "w-full rounded-xl border border-paper/[0.08] bg-ink px-3 py-2.5 text-[14px] text-paper outline-none focus:border-paper/60";
 
 function Composer() {
   const { addTask } = useStore();
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<Priority>("med");
   const [due, setDue] = useState<string | null>(null);
+  const [repeat, setRepeat] = useState<Repeat>("none");
   const [open, setOpen] = useState(false);
 
   const submit = () => {
     if (!title.trim()) return;
-    addTask({ title, priority, due });
+    addTask({ title, priority, due, repeat });
     setTitle("");
     setDue(null);
     setPriority("med");
+    setRepeat("none");
     setOpen(false);
   };
 
@@ -102,6 +122,13 @@ function Composer() {
               className="absolute inset-0 cursor-pointer opacity-0"
             />
           </label>
+          <span className="mx-1 h-4 w-px bg-line" />
+          {REPEAT_OPTIONS.map(([v, label]) => (
+            <Chip key={v} active={repeat === v} onClick={() => setRepeat(v)}>
+              <RepeatIcon className="h-3 w-3" />
+              {label}
+            </Chip>
+          ))}
         </div>
       )}
     </Widget>
@@ -110,54 +137,207 @@ function Composer() {
 
 function TaskRow({ task }: { task: Task }) {
   const { toggleTask, removeTask, updateTask } = useStore();
+  const { settings } = useSettings();
   const overdue = isOverdue(task);
+  const [expanded, setExpanded] = useState(false);
+  const [notes, setNotes] = useState(task.notes);
+  const [rDate, setRDate] = useState("");
+  const [rTime, setRTime] = useState("09:00");
+
+  // Keep local editor state in sync with the store (e.g. after import/reset).
+  useEffect(() => {
+    const d = task.remindAt ? new Date(task.remindAt) : null;
+    if (d && !isNaN(d.getTime())) {
+      setRDate(toDateInput(d));
+      setRTime(toTimeInput(d));
+    } else {
+      setRDate("");
+      setRTime("09:00");
+    }
+  }, [task.id, task.remindAt]);
+
+  useEffect(() => {
+    setNotes(task.notes);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task.id]);
+
+  const commitNotes = () => {
+    if (notes !== task.notes) updateTask(task.id, { notes });
+  };
+
+  const applyReminder = (date: string, time: string) => {
+    if (!date) {
+      if (task.remindAt) updateTask(task.id, { remindAt: null });
+      return;
+    }
+    const d = parseLocal(date, time);
+    updateTask(task.id, { remindAt: d ? d.toISOString() : null });
+  };
+
+  const reminderDate = task.remindAt ? new Date(task.remindAt) : null;
 
   return (
-    <div className="group flex items-center gap-3 border-b border-paper/[0.05] py-3 last:border-0">
-      <Checkbox checked={task.done} onChange={() => toggleTask(task.id)} label={task.title} />
-      <button
-        type="button"
-        onClick={() =>
-          updateTask(task.id, {
-            priority: PRIORITY_CYCLE[(PRIORITY_CYCLE.indexOf(task.priority) + 1) % PRIORITY_CYCLE.length],
-          })
-        }
-        disabled={task.done}
-        className="min-w-0 flex-1 text-left"
-        aria-label="Task"
-      >
-        <div className={cn("truncate text-[15px]", task.done ? "text-dim line-through" : "text-paper")}>
-          {task.title}
+    <div className="border-b border-paper/[0.05] py-3 last:border-0">
+      <div className="flex items-center gap-3">
+        <Checkbox checked={task.done} onChange={() => toggleTask(task.id)} label={task.title} />
+        <div className="min-w-0 flex-1">
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+            aria-label={expanded ? `Hide details for ${task.title}` : `Show details for ${task.title}`}
+            className="block w-full text-left"
+          >
+            <span className={cn("block truncate text-[15px]", task.done ? "text-dim line-through" : "text-paper")}>
+              {task.title}
+            </span>
+          </button>
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+            {!task.done && (
+              <button
+                type="button"
+                onClick={() =>
+                  updateTask(task.id, {
+                    priority: PRIORITY_CYCLE[(PRIORITY_CYCLE.indexOf(task.priority) + 1) % PRIORITY_CYCLE.length],
+                  })
+                }
+                aria-label={`Change priority (currently ${PRIORITY_LABEL[task.priority]})`}
+                className="flex items-center gap-1.5"
+              >
+                <PriorityDot priority={task.priority} />
+                <span className="text-[10px] uppercase tracking-[0.14em] text-dim">{PRIORITY_LABEL[task.priority]}</span>
+              </button>
+            )}
+            {task.due && !task.done && (
+              <span
+                className={cn(
+                  "flex items-center gap-1 text-[10px] uppercase tracking-[0.12em]",
+                  overdue ? "text-nred" : "text-mute",
+                )}
+              >
+                <CalendarIcon className="h-3 w-3" />
+                {relativeDay(task.due)}
+              </span>
+            )}
+            {task.remindAt && !task.done && reminderDate && (
+              <span className="flex items-center gap-1 text-[10px] uppercase tracking-[0.12em] text-mute">
+                <ClockIcon className="h-3 w-3" />
+                {fmtTime(reminderDate, settings.h24)}
+              </span>
+            )}
+            {task.repeat !== "none" && (
+              <span className="flex items-center gap-1 text-[10px] uppercase tracking-[0.12em] text-mute">
+                <RepeatIcon className="h-3 w-3" />
+                {task.repeat === "daily" ? "Daily" : "Weekly"}
+                {task.timesDone > 0 && <span className="font-dot tnum text-paper">×{task.timesDone}</span>}
+              </span>
+            )}
+            {task.spent > 0 && (
+              <span className="text-[10px] uppercase tracking-[0.12em] text-dim">
+                {task.spent} focus{task.spent > 1 ? "es" : ""}
+              </span>
+            )}
+            {task.notes.trim() !== "" && <NoteIcon className="h-3 w-3 text-dim" />}
+          </div>
         </div>
-        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-          {!task.done && (
-            <span className="flex items-center gap-1.5">
-              <PriorityDot priority={task.priority} />
-              <span className="text-[10px] uppercase tracking-[0.14em] text-dim">{PRIORITY_LABEL[task.priority]}</span>
-            </span>
-          )}
-          {task.due && !task.done && (
-            <span
-              className={cn(
-                "flex items-center gap-1 text-[10px] uppercase tracking-[0.12em]",
-                overdue ? "text-nred" : "text-mute",
-              )}
-            >
-              <CalendarIcon className="h-3 w-3" />
-              {relativeDay(task.due)}
-            </span>
-          )}
-          {task.spent > 0 && (
-            <span className="text-[10px] uppercase tracking-[0.12em] text-dim">
-              {task.spent} focus{task.spent > 1 ? "es" : ""}
-            </span>
-          )}
-        </div>
-      </button>
 
-      <IconButton tone="danger" aria-label="Delete task" onClick={() => removeTask(task.id)}>
-        <TrashIcon className="h-4 w-4" />
-      </IconButton>
+        <IconButton
+          aria-label={expanded ? "Hide details" : "Show details"}
+          onClick={() => setExpanded((v) => !v)}
+          className={cn("h-8 w-8 transition-transform", expanded && "rotate-180")}
+        >
+          <ChevronDown className="h-4 w-4" />
+        </IconButton>
+        <IconButton tone="danger" aria-label="Delete task" onClick={() => removeTask(task.id)}>
+          <TrashIcon className="h-4 w-4" />
+        </IconButton>
+      </div>
+
+      {expanded && (
+        <div className="mt-3 flex flex-col gap-4 pl-9 pr-1">
+          {/* Notes */}
+          <div>
+            <div className="label mb-2">Notes</div>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              onBlur={commitNotes}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") (e.target as HTMLTextAreaElement).blur();
+              }}
+              rows={3}
+              maxLength={1000}
+              placeholder="Add notes… (private, stored on this device)"
+              className={cn(panelInputCls, "resize-none")}
+            />
+          </div>
+
+          {/* Reminder */}
+          <div>
+            <div className="label mb-2">Reminder</div>
+            <div className="grid grid-cols-[1.4fr_1fr] gap-2">
+              <input
+                type="date"
+                value={rDate}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setRDate(v);
+                  applyReminder(v, rTime);
+                }}
+                aria-label="Reminder date"
+                className={panelInputCls}
+              />
+              <input
+                type="time"
+                value={rTime}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setRTime(v);
+                  if (rDate) applyReminder(rDate, v);
+                }}
+                aria-label="Reminder time"
+                className={panelInputCls}
+              />
+            </div>
+            {task.remindAt && reminderDate ? (
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-[11px] text-mute">
+                  Reminds you {relativeDay(toDateInput(reminderDate))} at {fmtTime(reminderDate, settings.h24)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => updateTask(task.id, { remindAt: null })}
+                  className="label text-dim transition-colors hover:text-nred"
+                >
+                  Clear
+                </button>
+              </div>
+            ) : (
+              <div className="mt-2 text-[11px] text-dim">No reminder set.</div>
+            )}
+          </div>
+
+          {/* Recurrence */}
+          <div>
+            <div className="label mb-2">Repeat</div>
+            <div className="flex gap-2">
+              {REPEAT_OPTIONS.map(([v, label]) => (
+                <Chip key={v} active={task.repeat === v} onClick={() => updateTask(task.id, { repeat: v })}>
+                  {v !== "none" && <RepeatIcon className="h-3 w-3" />}
+                  {label}
+                </Chip>
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-dim">
+              {task.repeat === "none"
+                ? "One-off task."
+                : task.repeat === "daily"
+                  ? "Completing it re-arms the task for the next day and counts each finish."
+                  : "Completing it re-arms the task for the same day next week and counts each finish."}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -166,6 +346,7 @@ export default function TasksModule() {
   const { tasks, clearCompletedTasks } = useStore();
   const { settings } = useSettings();
   const [filter, setFilter] = useState<Filter>("today");
+  const [search, setSearch] = useState("");
   const today = dateKey();
 
   const counts = useMemo(() => {
@@ -180,26 +361,32 @@ export default function TasksModule() {
 
   const visible = useMemo(() => {
     const sorted = [...tasks].sort(sortTasks);
+    const q = search.trim().toLowerCase();
+    const matches = (t: Task) =>
+      q === "" || t.title.toLowerCase().includes(q) || t.notes.toLowerCase().includes(q);
     switch (filter) {
       case "today":
-        return sorted.filter((t) => !t.done && ((t.due && t.due <= today) || !t.due));
+        return sorted.filter((t) => !t.done && ((t.due && t.due <= today) || !t.due) && matches(t));
       case "upcoming":
-        return sorted.filter((t) => !t.done && t.due && t.due > today);
+        return sorted.filter((t) => !t.done && t.due && t.due > today && matches(t));
       case "done":
-        return sorted.filter((t) => t.done).sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
+        return sorted
+          .filter((t) => t.done && matches(t))
+          .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
       default:
-        return sorted.filter((t) => !t.done);
+        return sorted.filter((t) => !t.done && matches(t));
     }
-  }, [tasks, filter, today]);
+  }, [tasks, filter, today, search]);
 
-  const completedToday = tasks.filter((t) => t.done && t.completedAt && dateKey(new Date(t.completedAt)) === today).length;
+  const completedToday = tasksCompletedOn(tasks, today);
+  const searching = search.trim() !== "";
 
   return (
     <div className="flex flex-col gap-3 animate-fade-up">
       <PageIntro
         eyebrow="Tasks"
         title={settings.name ? `${settings.name}'s task list` : "What matters today"}
-        description="Capture it, prioritise it, do it. Tasks are stored on your device and can power your focus sessions."
+        description="Capture it, prioritise it, do it. Tasks support notes, reminders and daily or weekly recurrence — all stored on your device."
       >
         <div className="mt-4 flex flex-wrap gap-2">
           <StatusPill red>{counts.all} open</StatusPill>
@@ -208,6 +395,22 @@ export default function TasksModule() {
       </PageIntro>
 
       <Composer />
+
+      <Widget className="flex items-center gap-2.5 p-3">
+        <SearchIcon className="h-4 w-4 shrink-0 text-dim" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search tasks & notes…"
+          aria-label="Search tasks"
+          className="min-w-0 flex-1 bg-transparent py-2 text-[15px] text-paper outline-none placeholder:text-dim"
+        />
+        {searching && (
+          <button type="button" onClick={() => setSearch("")} className="label text-mute transition-colors hover:text-paper">
+            Clear
+          </button>
+        )}
+      </Widget>
 
       <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 py-1">
         {(
@@ -229,11 +432,13 @@ export default function TasksModule() {
         {visible.length === 0 ? (
           <EmptyState
             icon={<ListIcon className="h-6 w-6" />}
-            title={filter === "done" ? "Nothing completed yet" : "All clear"}
+            title={searching ? "No matches" : filter === "done" ? "Nothing completed yet" : "All clear"}
             description={
-              filter === "done"
-                ? "Completed tasks will collect here."
-                : "Add a task above to start planning your day."
+              searching
+                ? `Nothing matches “${search.trim()}”.`
+                : filter === "done"
+                  ? "Completed tasks will collect here."
+                  : "Add a task above to start planning your day."
             }
           />
         ) : (

@@ -6,6 +6,7 @@ export type View =
   | "more"
   | "life"
   | "year"
+  | "stats"
   | "widgets"
   | "settings";
 

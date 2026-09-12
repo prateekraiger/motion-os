@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { useLocalStorage, uid } from "./useLocalStorage";
-import { phaseDurationMs } from "../lib/productivity";
+import { nextDueKey, phaseDurationMs } from "../lib/productivity";
 import type {
   FocusConfig,
   FocusPhase,
@@ -16,6 +16,7 @@ import type {
   FocusTimer,
   Habit,
   Priority,
+  Repeat,
   Task,
 } from "../lib/types";
 import { HABIT_COLORS } from "../lib/types";
@@ -48,6 +49,27 @@ const DEFAULT_TIMER: FocusTimer = {
   segmentStartedAt: null,
 };
 
+/** Fill in defaults for task fields that older backups may lack. */
+function normalizeTask(raw: unknown): Task {
+  const t = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
+  return {
+    id: typeof t.id === "string" ? t.id : uid(),
+    title: typeof t.title === "string" && t.title.trim() ? t.title : "Untitled task",
+    done: t.done === true,
+    priority: t.priority === "high" || t.priority === "low" ? t.priority : "med",
+    createdAt: typeof t.createdAt === "number" ? t.createdAt : Date.now(),
+    completedAt: typeof t.completedAt === "number" ? t.completedAt : null,
+    due: typeof t.due === "string" ? t.due : null,
+    notes: typeof t.notes === "string" ? t.notes : "",
+    estimate: typeof t.estimate === "number" ? t.estimate : 0,
+    spent: typeof t.spent === "number" ? t.spent : 0,
+    order: typeof t.order === "number" ? t.order : 0,
+    remindAt: typeof t.remindAt === "string" ? t.remindAt : null,
+    repeat: t.repeat === "daily" || t.repeat === "weekly" ? t.repeat : "none",
+    timesDone: typeof t.timesDone === "number" ? t.timesDone : 0,
+  };
+}
+
 interface StoreCtx {
   tasks: Task[];
   habits: Habit[];
@@ -56,7 +78,13 @@ interface StoreCtx {
   focusConfig: FocusConfig;
 
   // Tasks
-  addTask: (input: { title: string; priority?: Priority; due?: string | null; estimate?: number }) => void;
+  addTask: (input: {
+    title: string;
+    priority?: Priority;
+    due?: string | null;
+    estimate?: number;
+    repeat?: Repeat;
+  }) => void;
   updateTask: (id: string, patch: Partial<Task>) => void;
   toggleTask: (id: string) => void;
   removeTask: (id: string) => void;
@@ -121,7 +149,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   /* --------------------------- Tasks ------------------------------- */
   const addTask: StoreCtx["addTask"] = useCallback(
-    ({ title, priority = "med", due = null, estimate = 0 }) => {
+    ({ title, priority = "med", due = null, estimate = 0, repeat = "none" }) => {
       const clean = title.trim();
       if (!clean) return;
       setTasks((prev) => [
@@ -137,6 +165,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           estimate,
           spent: 0,
           order: prev.length ? Math.min(...prev.map((t) => t.order)) - 1 : 0,
+          remindAt: null,
+          repeat,
+          timesDone: 0,
         },
         ...prev,
       ]);
@@ -152,9 +183,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const toggleTask: StoreCtx["toggleTask"] = useCallback(
     (id) =>
       setTasks((prev) =>
-        prev.map((t) =>
-          t.id === id ? { ...t, done: !t.done, completedAt: !t.done ? Date.now() : null } : t,
-        ),
+        prev.map((t) => {
+          if (t.id !== id) return t;
+          if (!t.done && t.repeat !== "none") {
+            // Completing a recurring task: count it, keep the last-completed
+            // moment (for stats), and re-arm the due date for the next cycle.
+            return {
+              ...t,
+              done: false,
+              completedAt: Date.now(),
+              due: nextDueKey(t),
+              timesDone: t.timesDone + 1,
+            };
+          }
+          return { ...t, done: !t.done, completedAt: !t.done ? Date.now() : null };
+        }),
       ),
     [setTasks],
   );
@@ -393,7 +436,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     (json: string) => {
       try {
         const data = JSON.parse(json);
-        if (Array.isArray(data.tasks)) setTasks(data.tasks);
+        // Normalise so backups made by older versions (without remindAt /
+        // repeat / timesDone / notes) import cleanly.
+        if (Array.isArray(data.tasks)) setTasks(data.tasks.map(normalizeTask));
         if (Array.isArray(data.habits)) setHabits(data.habits);
         if (Array.isArray(data.sessions)) setSessions(data.sessions);
         if (data.focusConfig) setFocusConfig({ ...DEFAULT_CONFIG, ...data.focusConfig });

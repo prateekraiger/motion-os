@@ -1,4 +1,5 @@
 export type Priority = "low" | "med" | "high";
+export type Repeat = "none" | "daily" | "weekly";
 
 export interface Task {
   id: string;
@@ -15,6 +16,12 @@ export interface Task {
   /** Focus blocks actually spent on this task. */
   spent: number;
   order: number;
+  /** ISO moment of a one-time reminder, or null. */
+  remindAt: string | null;
+  /** Recurrence applied when the task is completed. */
+  repeat: Repeat;
+  /** How many times this task has been completed (recurrence history). */
+  timesDone: number;
 }
 
 export interface Habit {

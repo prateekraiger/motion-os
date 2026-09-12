@@ -6,7 +6,7 @@ import { focusMsTotal } from "../lib/productivity";
 import { computeAge, fmtDuration, yearProgress } from "../lib/time";
 import type { View } from "../lib/nav";
 import { Label, PageIntro, StatTile, Widget } from "./ui";
-import { CalendarIcon, ChevronRight, ClockIcon, SunIcon } from "./icons";
+import { CalendarIcon, ChartIcon, ChevronRight, ClockIcon, SunIcon } from "./icons";
 import { cn } from "../utils/cn";
 
 function NavRow({
@@ -26,12 +26,12 @@ function NavRow({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-4 border-b border-white/[0.05] px-1 py-4 text-left last:border-0 transition-colors hover:bg-white/[0.02]"
+      className="flex w-full items-center gap-4 border-b border-paper/[0.05] px-1 py-4 text-left last:border-0 transition-colors hover:bg-paper/[0.02]"
     >
       <span
         className={cn(
           "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border",
-          accent ? "border-nred/40 bg-nred/10 text-nred" : "border-white/[0.08] bg-black text-mute",
+          accent ? "border-nred/40 bg-nred/10 text-nred" : "border-paper/[0.08] bg-ink text-mute",
         )}
       >
         {icon}
@@ -91,6 +91,12 @@ export default function MoreModule({ onNavigate }: { onNavigate: (v: View) => vo
 
       {/* Tools */}
       <Widget className="py-2">
+        <NavRow
+          icon={<ChartIcon className="h-5 w-5" />}
+          title="Stats & history"
+          sub="7-day focus, tasks and habits"
+          onClick={() => onNavigate("stats")}
+        />
         <NavRow
           icon={<ClockIcon className="h-5 w-5" />}
           title="Home-screen widgets"

@@ -137,6 +137,39 @@ export const BoltIcon = (p: IconProps) => (
   </Base>
 );
 
+export const SearchIcon = (p: IconProps) => (
+  <Base {...p}>
+    <circle cx="11" cy="11" r="6.5" />
+    <path d="M20 20l-4.3-4.3" />
+  </Base>
+);
+
+export const RepeatIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M17 2l4 4-4 4" />
+    <path d="M3 12v-1a4 4 0 0 1 4-4h14" />
+    <path d="M7 22l-4-4 4-4" />
+    <path d="M21 12v1a4 4 0 0 1-4 4H3" />
+  </Base>
+);
+
+export const ChartIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M3 3v18h18" />
+    <path d="M8 17v-5" />
+    <path d="M13 17V8" />
+    <path d="M18 17v-8" />
+  </Base>
+);
+
+export const NoteIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+    <path d="M14 3v6h6" />
+    <path d="M9 13h6M9 17h4" />
+  </Base>
+);
+
 export const SunIcon = (p: IconProps) => (
   <Base {...p}>
     <circle cx="12" cy="12" r="4" />

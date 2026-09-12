@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useNow } from "../hooks/useNow";
 import { useSettings } from "../hooks/useSettings";
 import { useStore } from "../hooks/useStore";
-import { focusMsOn, habitDoneToday, isOverdue, sortTasks } from "../lib/productivity";
+import { focusMsOn, habitDoneToday, isOverdue, nextReminder, sortTasks, tasksCompletedOn } from "../lib/productivity";
 import {
   computeAge,
   dateKey,
@@ -16,7 +16,7 @@ import {
 } from "../lib/time";
 import type { View } from "../lib/nav";
 import { Checkbox, DotBar, IconButton, Label, Num, PriorityDot, StatTile, Widget } from "./ui";
-import { BoltIcon, ChevronRight, FlameIcon, PauseIcon, PlayIcon } from "./icons";
+import { BoltIcon, ChevronRight, ClockIcon, FlameIcon, PauseIcon, PlayIcon } from "./icons";
 import { cn } from "../utils/cn";
 
 function CardLink({ children, onClick, className }: { children: React.ReactNode; onClick: () => void; className?: string }) {
@@ -47,8 +47,9 @@ export default function TodayModule({ onNavigate }: { onNavigate: (v: View) => v
     [tasks, today],
   );
   const openCount = tasks.filter((t) => !t.done).length;
-  const doneToday = tasks.filter((t) => t.done && t.completedAt && dateKey(new Date(t.completedAt)) === today).length;
+  const doneToday = tasksCompletedOn(tasks, today);
   const overdueCount = tasks.filter((t) => isOverdue(t, nowDate)).length;
+  const nextRem = useMemo(() => nextReminder(tasks, now), [tasks, now]);
 
   const focusToday = focusMsOn(sessions, today);
   const habitsDone = habits.filter((h) => habitDoneToday(h, nowDate)).length;
@@ -78,6 +79,27 @@ export default function TodayModule({ onNavigate }: { onNavigate: (v: View) => v
             : `${openCount} open ${openCount === 1 ? "task" : "tasks"}${overdueCount ? ` · ${overdueCount} overdue` : ""}.`}
         </p>
       </div>
+
+      {/* NEXT REMINDER */}
+      {nextRem && (
+        <button
+          type="button"
+          onClick={() => onNavigate("tasks")}
+          className="flex w-full items-center gap-3 rounded-[20px] border border-paper/[0.08] bg-card px-4 py-3 text-left transition-colors hover:border-paper/[0.2]"
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-nred/40 bg-nred/10 text-nred">
+            <ClockIcon className="h-4 w-4" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="label block text-nred">Next reminder</span>
+            <span className="block truncate text-[13px] text-paper">{nextRem.task.title}</span>
+          </span>
+          <span className="shrink-0 text-right">
+            <span className="font-dot tnum block text-[14px] text-paper">{fmtTime(new Date(nextRem.at), settings.h24)}</span>
+            <span className="label block">{fmtDuration(nextRem.at - now)}</span>
+          </span>
+        </button>
+      )}
 
       {/* DAY PROGRESS */}
       <Widget>
