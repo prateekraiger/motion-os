@@ -26,7 +26,7 @@ function Cell({ value, label, className }: { value: string; label: string; class
 
 export default function AgeModule() {
   const { birthDate, settings } = useSettings();
-  const now = useNow("raf");
+  const now = useNow(settings.showMs ? "raf" : 1);
   const birth = birthDate ?? new Date(2000, 0, 1);
   const nowDate = useMemo(() => new Date(now), [now]);
 

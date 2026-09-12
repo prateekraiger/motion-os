@@ -31,7 +31,7 @@ function RingWidget({ label, fraction, caption }: { label: string; fraction: num
 
 export default function YearModule() {
   const { settings, update } = useSettings();
-  const now = useNow("raf");
+  const now = useNow(settings.showMs ? "raf" : 1);
   const nowDate = useMemo(() => new Date(now), [now]);
 
   const yp = yearProgress(nowDate);

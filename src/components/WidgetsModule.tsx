@@ -188,19 +188,6 @@ export default function WidgetsModule() {
         </p>
       </Widget>
 
-      <Widget>
-        <Label>Built for a glance</Label>
-        <div className="mt-3 space-y-3">
-          <div className="flex items-start gap-3 border-b border-paper/[0.06] pb-3">
-            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-nred" />
-            <p className="text-[12px] leading-relaxed text-mute"><span className="text-paper">Live seconds:</span> Android's native Chronometer keeps the time moving without waking the full app every second.</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-paper" />
-            <p className="text-[12px] leading-relaxed text-mute"><span className="text-paper">Private by default:</span> only the values needed to draw your widgets are mirrored to local Android storage.</p>
-          </div>
-        </div>
-      </Widget>
     </div>
   );
 }
