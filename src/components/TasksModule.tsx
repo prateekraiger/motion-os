@@ -70,7 +70,7 @@ function Composer() {
       </div>
 
       {open && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/[0.06] pt-3">
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-paper/[0.06] pt-3">
           {PRIORITY_CYCLE.map((p) => (
             <Chip key={p} active={priority === p} onClick={() => setPriority(p)}>
               <PriorityDot priority={p} />
@@ -89,7 +89,7 @@ function Composer() {
               "relative inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors",
               due && due !== today && due !== tomorrow
                 ? "border-paper bg-paper text-ink"
-                : "border-white/[0.1] text-mute hover:text-paper",
+                : "border-paper/[0.1] text-mute hover:text-paper",
             )}
           >
             <CalendarIcon className="h-3.5 w-3.5" />
@@ -113,7 +113,7 @@ function TaskRow({ task }: { task: Task }) {
   const overdue = isOverdue(task);
 
   return (
-    <div className="group flex items-center gap-3 border-b border-white/[0.05] py-3 last:border-0">
+    <div className="group flex items-center gap-3 border-b border-paper/[0.05] py-3 last:border-0">
       <Checkbox checked={task.done} onChange={() => toggleTask(task.id)} label={task.title} />
       <button
         type="button"
@@ -246,7 +246,7 @@ export default function TasksModule() {
           <button
             type="button"
             onClick={clearCompletedTasks}
-            className="w-full rounded-full border border-white/[0.1] py-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-mute transition-colors hover:border-nred/50 hover:text-nred"
+            className="w-full rounded-full border border-paper/[0.1] py-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-mute transition-colors hover:border-nred/50 hover:text-nred"
           >
             Clear completed
           </button>
@@ -256,15 +256,15 @@ export default function TasksModule() {
       <Widget>
         <SectionHeader title="Today at a glance" />
         <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-          <div className="rounded-2xl bg-black py-4">
+          <div className="rounded-2xl bg-ink py-4">
             <Num value={counts.all} className="text-[30px] text-paper" />
             <div className="label mt-1">open</div>
           </div>
-          <div className="rounded-2xl bg-black py-4">
+          <div className="rounded-2xl bg-ink py-4">
             <Num value={completedToday} className="text-[30px] text-paper" />
             <div className="label mt-1">done</div>
           </div>
-          <div className="rounded-2xl bg-black py-4">
+          <div className="rounded-2xl bg-ink py-4">
             <Num
               value={counts.all + completedToday === 0 ? 0 : Math.round((completedToday / (counts.all + completedToday)) * 100)}
               className="text-[30px] text-nred"

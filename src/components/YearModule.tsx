@@ -102,7 +102,7 @@ export default function YearModule() {
           </div>
         )}
 
-        <div className="mt-5 flex items-center justify-between border-t border-white/[0.06] pt-4">
+        <div className="mt-5 flex items-center justify-between border-t border-paper/[0.06] pt-4">
           <div>
             <Num value={yp.dayOfYear - 1} className="text-[26px] text-paper" />
             <div className="label mt-1">days done</div>
@@ -168,7 +168,7 @@ export default function YearModule() {
             [pad(toNewYear.minutes), "min"],
             [pad(toNewYear.seconds), "sec"],
           ].map(([v, l]) => (
-            <div key={l} className="rounded-2xl bg-black px-3 py-3">
+            <div key={l} className="rounded-2xl bg-ink px-3 py-3">
               <Num value={v} className="text-[26px] text-paper" />
               <div className="label mt-1">{l}</div>
             </div>

@@ -7,7 +7,7 @@ import { FlameIcon, ListIcon, SunIcon, TargetIcon } from "./icons";
 import { cn } from "../utils/cn";
 
 const inputCls =
-  "w-full rounded-2xl border border-white/[0.1] bg-card px-4 py-4 text-[16px] text-paper outline-none transition-colors focus:border-paper/70 placeholder:text-dim";
+  "w-full rounded-2xl border border-paper/[0.1] bg-card px-4 py-4 text-[16px] text-paper outline-none transition-colors focus:border-paper/70 placeholder:text-dim";
 
 export default function Onboarding() {
   const { update } = useSettings();
@@ -50,15 +50,15 @@ export default function Onboarding() {
               bigger picture — all in one calm, private place.
             </p>
 
-            <div className="mt-8 overflow-hidden rounded-[28px] border border-white/[0.07] bg-card">
+            <div className="mt-8 overflow-hidden rounded-[28px] border border-paper/[0.07] bg-card">
               {[
                 [<ListIcon className="h-4 w-4" />, "Tasks", "Capture and prioritise what matters"],
                 [<TargetIcon className="h-4 w-4" />, "Focus", "Work in blocks, track every minute"],
                 [<FlameIcon className="h-4 w-4" />, "Habits", "Build streaks, one day at a time"],
                 [<SunIcon className="h-4 w-4" />, "Perspective", "Your day, year, and life in motion"],
               ].map(([icon, title, copy], i) => (
-                <div key={i} className="flex items-center gap-4 border-b border-white/[0.06] px-5 py-4 last:border-0">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-black text-nred">
+                <div key={i} className="flex items-center gap-4 border-b border-paper/[0.06] px-5 py-4 last:border-0">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-paper/[0.08] bg-ink text-nred">
                     {icon}
                   </span>
                   <div>

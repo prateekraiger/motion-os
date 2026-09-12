@@ -8,7 +8,7 @@ import { cn } from "../utils/cn";
 
 function Row({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-white/[0.06] py-4 last:border-0">
+    <div className="flex items-center justify-between gap-4 border-b border-paper/[0.06] py-4 last:border-0">
       <div className="min-w-0">
         <div className="text-[14px] text-paper">{title}</div>
         {sub && <div className="mt-0.5 text-[11px] leading-relaxed text-dim">{sub}</div>}
@@ -39,7 +39,7 @@ function Stepper({
         aria-label="Decrease"
         disabled={value <= min}
         onClick={() => onChange(Math.max(min, value - step))}
-        className="border border-white/[0.1]"
+        className="border border-paper/[0.1]"
       >
         <span className="text-lg leading-none">−</span>
       </IconButton>
@@ -51,7 +51,7 @@ function Stepper({
         aria-label="Increase"
         disabled={value >= max}
         onClick={() => onChange(Math.min(max, value + step))}
-        className="border border-white/[0.1]"
+        className="border border-paper/[0.1]"
       >
         <span className="text-lg leading-none">+</span>
       </IconButton>
@@ -60,7 +60,7 @@ function Stepper({
 }
 
 const inputCls =
-  "w-full rounded-2xl border border-white/[0.08] bg-black px-4 py-3 text-[15px] text-paper outline-none focus:border-paper/60 placeholder:text-dim";
+  "w-full rounded-2xl border border-paper/[0.08] bg-ink px-4 py-3 text-[15px] text-paper outline-none focus:border-paper/60 placeholder:text-dim";
 
 export default function SettingsModule({ onResetDone }: { onResetDone?: () => void }) {
   const { settings, birthDate, update, reset } = useSettings();
@@ -252,7 +252,7 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
             step={1}
             value={settings.lifeExpectancy}
             onChange={(e) => update({ lifeExpectancy: Number(e.target.value) })}
-            className="mt-4 w-full accent-white"
+            className="mt-4 w-full accent-paper"
           />
           <div className="mt-1 flex justify-between">
             <span className="label">50</span>
@@ -269,7 +269,7 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
             <button
               type="button"
               onClick={doExport}
-              className="rounded-full border border-white/[0.12] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-paper hover:bg-white/[0.06]"
+              className="rounded-full border border-paper/[0.12] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-paper hover:bg-paper/[0.06]"
             >
               Export
             </button>
@@ -279,14 +279,14 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="rounded-full border border-white/[0.12] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-paper hover:bg-white/[0.06]"
+                className="rounded-full border border-paper/[0.12] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-paper hover:bg-paper/[0.06]"
               >
                 File
               </button>
               <button
                 type="button"
                 onClick={() => setImportOpen((v) => !v)}
-                className="rounded-full border border-white/[0.12] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-paper hover:bg-white/[0.06]"
+                className="rounded-full border border-paper/[0.12] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-paper hover:bg-paper/[0.06]"
               >
                 Paste
               </button>

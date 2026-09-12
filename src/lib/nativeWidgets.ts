@@ -7,6 +7,7 @@ interface MotionWidgetsPlugin {
     birthEpochMs: string;
     name: string;
     h24: boolean;
+    theme?: string;
   }): Promise<void>;
   requestPinWidget(options: { kind: WidgetKind }): Promise<{
     requested: boolean;
@@ -27,6 +28,7 @@ export async function syncNativeWidgetSettings(options: {
   birth: string | null;
   name: string;
   h24: boolean;
+  widgetTheme?: string;
 }) {
   if (!isAndroidNative()) return;
 
@@ -35,6 +37,7 @@ export async function syncNativeWidgetSettings(options: {
       birthEpochMs: options.birth ? String(new Date(options.birth).getTime()) : "0",
       name: options.name,
       h24: options.h24,
+      theme: options.widgetTheme || "system",
     });
   } catch {
     // A widget should never make the main app fail. It can be synced again

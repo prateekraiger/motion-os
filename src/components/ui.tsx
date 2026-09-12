@@ -23,9 +23,9 @@ export function Widget({
       onClick={onClick}
       style={style}
       className={cn(
-        "relative overflow-hidden rounded-[28px] border border-white/[0.06] p-5 transition-all duration-300 ease-out",
-        glass ? "bg-black/55 backdrop-blur-xl" : "bg-card",
-        onClick && "cursor-pointer active:scale-[0.97] hover:border-white/[0.15] hover:shadow-[0_4px_24px_rgba(0,0,0,0.5)]",
+        "relative overflow-hidden rounded-[28px] border border-paper/[0.06] p-5 transition-all duration-300 ease-out",
+        glass ? "bg-ink/55 backdrop-blur-xl" : "bg-card",
+        onClick && "cursor-pointer active:scale-[0.97] hover:border-paper/[0.15] hover:shadow-[0_4px_24px_var(--color-shadow)]",
         className,
       )}
     >
@@ -85,8 +85,8 @@ export function ActionButton({
       className={cn(
         "inline-flex min-h-11 items-center justify-center rounded-full px-4 text-[10px] font-semibold uppercase tracking-[0.16em] transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/80 disabled:cursor-not-allowed disabled:opacity-50 hover:shadow-lg",
         secondary
-          ? "border border-white/[0.12] bg-white/[0.04] text-paper hover:bg-white/[0.15] active:scale-[0.98]"
-          : "bg-paper text-ink hover:bg-white/85 active:scale-[0.98]",
+          ? "border border-paper/[0.12] bg-paper/[0.04] text-paper hover:bg-paper/[0.15] active:scale-[0.98]"
+          : "bg-paper text-ink hover:bg-paper/85 active:scale-[0.98]",
         className,
       )}
     >
@@ -97,7 +97,7 @@ export function ActionButton({
 
 export function StatusPill({ children, red = false }: { children: ReactNode; red?: boolean }) {
   return (
-    <span className={cn("inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-medium uppercase tracking-[0.16em]", red ? "border-nred/40 text-nred shadow-[0_0_12px_rgba(255,0,0,0.15)]" : "border-white/[0.1] text-mute")}>
+    <span className={cn("inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-medium uppercase tracking-[0.16em]", red ? "border-nred/40 text-nred shadow-[0_0_12px_rgba(255,0,0,0.15)]" : "border-paper/[0.1] text-mute")}>
       <span className={cn("h-1.5 w-1.5 rounded-full", red ? "bg-nred animate-dot-pulse shadow-[0_0_8px_rgba(255,0,0,0.8)]" : "bg-mute")} />
       {children}
     </span>
@@ -264,7 +264,7 @@ export function Segmented<T extends string>({
   className?: string;
 }) {
   return (
-    <div className={cn("inline-flex rounded-full border border-white/[0.08] bg-black p-1", className)} role="tablist">
+    <div className={cn("inline-flex rounded-full border border-paper/[0.08] bg-ink p-1", className)} role="tablist">
       {options.map((o) => (
         <button
           key={o.value}
@@ -297,7 +297,7 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       onClick={() => onChange(!checked)}
       className={cn(
         "relative h-7 w-12 shrink-0 rounded-full border transition-colors",
-        checked ? "border-paper bg-paper" : "border-line bg-black",
+        checked ? "border-paper bg-paper" : "border-line bg-ink",
       )}
     >
       <span
@@ -315,7 +315,7 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
 /* ------------------------------------------------------------------ */
 export function StatRow({ label, value, sub }: { label: string; value: ReactNode; sub?: string }) {
   return (
-    <div className="flex items-center justify-between border-b border-white/[0.06] py-3 last:border-0">
+    <div className="flex items-center justify-between border-b border-paper/[0.06] py-3 last:border-0">
       <div>
         <div className="label">{label}</div>
         {sub && <div className="mt-0.5 text-[11px] text-dim">{sub}</div>}
@@ -384,8 +384,8 @@ export function IconButton({
       type="button"
       className={cn(
         "inline-flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/70 disabled:opacity-40",
-        tone === "ghost" && "text-mute hover:bg-white/[0.06] hover:text-paper",
-        tone === "solid" && "bg-paper text-ink hover:bg-white/85",
+        tone === "ghost" && "text-mute hover:bg-paper/[0.06] hover:text-paper",
+        tone === "solid" && "bg-paper text-ink hover:bg-paper/85",
         tone === "danger" && "text-mute hover:bg-nred/15 hover:text-nred",
         className,
       )}
@@ -413,7 +413,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
       {icon && (
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.08] bg-black text-mute">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-paper/[0.08] bg-ink text-mute">
           {icon}
         </div>
       )}
@@ -479,7 +479,7 @@ export function Chip({
       onClick={onClick}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors",
-        active ? "border-paper bg-paper text-ink" : "border-white/[0.1] text-mute hover:border-white/25 hover:text-paper",
+        active ? "border-paper bg-paper text-ink" : "border-paper/[0.1] text-mute hover:border-paper/25 hover:text-paper",
         className,
       )}
     >
@@ -505,7 +505,7 @@ export function StatTile({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-2xl bg-black px-3.5 py-3.5", className)}>
+    <div className={cn("rounded-2xl bg-ink px-3.5 py-3.5", className)}>
       <Num value={value} className={cn("text-[26px]", accent ? "text-nred" : "text-paper")} />
       <div className="label mt-1.5">{label}</div>
       {sub && <div className="mt-0.5 text-[10px] text-dim">{sub}</div>}

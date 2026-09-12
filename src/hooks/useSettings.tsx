@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { syncNativeWidgetSettings } from "../lib/nativeWidgets";
 
 export type YearView = "dots" | "bar";
+export type WidgetTheme = "system" | "light" | "dark";
 
 export interface Settings {
   /** ISO string of the birth moment (local time preserved via epoch) */
@@ -12,6 +13,7 @@ export interface Settings {
   yearView: YearView;
   lifeExpectancy: number;
   h24: boolean;
+  widgetTheme: WidgetTheme;
   /** Whether the first-run flow has been completed. */
   onboarded: boolean;
 }
@@ -26,6 +28,7 @@ const DEFAULTS: Settings = {
   yearView: "dots",
   lifeExpectancy: 80,
   h24: true,
+  widgetTheme: "system",
   onboarded: false,
 };
 

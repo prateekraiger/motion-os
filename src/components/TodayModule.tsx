@@ -147,7 +147,7 @@ export default function TodayModule({ onNavigate }: { onNavigate: (v: View) => v
           </div>
         ) : (
           openTasks.map((t) => (
-            <div key={t.id} className="flex items-center gap-3 border-t border-white/[0.05] py-3">
+            <div key={t.id} className="flex items-center gap-3 border-t border-paper/[0.05] py-3">
               <Checkbox checked={t.done} onChange={() => toggleTask(t.id)} label={t.title} size={22} />
               <span className="min-w-0 flex-1 truncate text-[14px] text-paper">{t.title}</span>
               {isOverdue(t, nowDate) && <span className="text-[10px] uppercase tracking-[0.12em] text-nred">Overdue</span>}
@@ -176,7 +176,7 @@ export default function TodayModule({ onNavigate }: { onNavigate: (v: View) => v
                   onClick={() => toggleHabit(h.id, today)}
                   className={cn(
                     "flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-colors",
-                    done ? "border-transparent bg-white/[0.05]" : "border-white/[0.06] bg-black",
+                    done ? "border-transparent bg-paper/[0.05]" : "border-paper/[0.06] bg-ink",
                   )}
                 >
                   <span

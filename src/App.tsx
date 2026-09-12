@@ -60,7 +60,7 @@ function Header({ view, onBack }: { view: View; onBack: () => void }) {
   const isSub = view in SUB_TITLES;
 
   return (
-    <header className="sticky top-0 z-20 border-b border-white/[0.05] bg-black/85 pt-safe backdrop-blur-md">
+    <header className="sticky top-0 z-20 border-b border-paper/[0.05] bg-ink/85 pt-safe backdrop-blur-md">
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-2.5">
           {isSub ? (
@@ -109,7 +109,7 @@ function Shell() {
   const activeTab: MainTab = isMainTab(view) ? view : "more";
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col sm:border-x sm:border-white/[0.06]">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col sm:border-x sm:border-paper/[0.06]">
       <Header view={view} onBack={() => navigate("more")} />
 
       <main id="main-content" className="flex-1 px-3 pb-32 pt-1">
@@ -125,7 +125,7 @@ function Shell() {
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-safe" aria-label="Primary navigation">
-        <div className="mb-3 flex w-full max-w-[400px] items-center justify-between rounded-full border border-white/[0.1] bg-[#0b0b0b]/80 p-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
+        <div className="mb-3 flex w-full max-w-[400px] items-center justify-between rounded-full border border-paper/[0.1] bg-ink/80 p-1.5 shadow-[0_10px_40px_var(--color-shadow)] backdrop-blur-2xl">
           {MAIN_TABS.map((id) => {
             const item = TAB_META[id];
             const active = activeTab === id;
@@ -138,7 +138,7 @@ function Shell() {
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex min-h-14 flex-1 flex-col items-center justify-center gap-1 rounded-full py-2 transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/80",
-                  active ? "bg-paper text-ink shadow-[0_0_16px_rgba(255,255,255,0.4)] scale-105" : "text-mute hover:text-paper hover:bg-white/[0.04]",
+                  active ? "bg-paper text-ink shadow-[0_0_16px_color-mix(in_srgb,var(--color-paper)_40%,transparent)] scale-105" : "text-mute hover:text-paper hover:bg-paper/[0.04]",
                 )}
               >
                 {item.icon(active)}

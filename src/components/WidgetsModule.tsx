@@ -3,7 +3,7 @@ import { useNow } from "../hooks/useNow";
 import { useSettings } from "../hooks/useSettings";
 import { computeAge, nextBirthday, yearProgress, pad, fmtTime } from "../lib/time";
 import { requestNativeWidget, isAndroidNative, type WidgetKind } from "../lib/nativeWidgets";
-import { ActionButton, DotBar, DotGrid, Label, Num, PageIntro, StatusPill, Widget } from "./ui";
+import { ActionButton, DotBar, DotGrid, Label, Num, PageIntro, StatusPill, Widget, Segmented } from "./ui";
 import { cn } from "../utils/cn";
 
 function PulseDot({ className }: { className?: string }) {
@@ -28,7 +28,7 @@ function WidgetPreview({
 
   if (kind === "age") {
     return (
-      <div className="rounded-[22px] border border-white/[0.1] bg-[#111]/90 p-4 shadow-[0_16px_32px_rgba(0,0,0,0.35)]">
+      <div className="rounded-[22px] border border-paper/[0.1] bg-card-2/90 p-4 shadow-[0_16px_32px_var(--color-shadow)]">
         <div className="flex items-center justify-between">
           <Label red>Age in motion</Label>
           <span className="label">2 × 2</span>
@@ -54,7 +54,7 @@ function WidgetPreview({
   // Keep the preview light; the native Android widget uses the OS Chronometer
   // for the seconds between app refreshes.
   return (
-    <div className="rounded-[22px] border border-white/[0.1] bg-[#111]/90 p-4 shadow-[0_16px_32px_rgba(0,0,0,0.35)]">
+    <div className="rounded-[22px] border border-paper/[0.1] bg-card-2/90 p-4 shadow-[0_16px_32px_var(--color-shadow)]">
       <div className="flex items-center justify-between">
         <Label red>Year in motion</Label>
         <Num value={`${yp.percent.toFixed(2)}%`} className="text-[16px] text-paper" />
@@ -64,7 +64,7 @@ function WidgetPreview({
         <span className="label"><span className="text-paper">{yp.dayOfYear}</span> days done</span>
         <span className="label"><span className="text-paper">{yp.daysRemaining}</span> left</span>
       </div>
-      <div className="mt-3 flex items-center justify-between border-t border-white/[0.06] pt-3">
+      <div className="mt-3 flex items-center justify-between border-t border-paper/[0.06] pt-3">
         <span className="label">{fmtTime(now, h24)}</span>
         <PulseDot />
       </div>
@@ -73,7 +73,7 @@ function WidgetPreview({
 }
 
 export default function WidgetsModule() {
-  const { birthDate, settings } = useSettings();
+  const { birthDate, settings, update } = useSettings();
   const now = new Date(useNow(1));
   const [pending, setPending] = useState<WidgetKind | null>(null);
   const [feedback, setFeedback] = useState<{ kind: WidgetKind; message: string } | null>(null);
@@ -115,7 +115,7 @@ export default function WidgetsModule() {
             <Label red>Life widget</Label>
             <h2 className="mt-2 font-dot text-[24px] leading-none text-paper">Age in motion</h2>
           </div>
-          <span className="label rounded-full border border-white/[0.1] px-2.5 py-1.5">2 × 2</span>
+          <span className="label rounded-full border border-paper/[0.1] px-2.5 py-1.5">2 × 2</span>
         </div>
         <p className="mt-3 text-[12px] leading-relaxed text-mute">Your lived time, condensed into one glance. The counter continues through the day.</p>
         <div className="mt-5">
@@ -133,7 +133,7 @@ export default function WidgetsModule() {
             <Label red>Progress widget</Label>
             <h2 className="mt-2 font-dot text-[24px] leading-none text-paper">Year in motion</h2>
           </div>
-          <span className="label rounded-full border border-white/[0.1] px-2.5 py-1.5">4 × 2</span>
+          <span className="label rounded-full border border-paper/[0.1] px-2.5 py-1.5">4 × 2</span>
         </div>
         <p className="mt-3 text-[12px] leading-relaxed text-mute">A quiet reminder of where this year sits, from January to December.</p>
         <div className="mt-5">
@@ -146,6 +146,27 @@ export default function WidgetsModule() {
       </Widget>
 
       <Widget>
+        <Label red>Widget settings</Label>
+        <div className="mt-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[12px] text-paper">Theme preference</span>
+            <Segmented
+              value={settings.widgetTheme}
+              options={[
+                { value: "system", label: "Auto" },
+                { value: "light", label: "Light" },
+                { value: "dark", label: "Dark" },
+              ]}
+              onChange={(theme: any) => update({ widgetTheme: theme })}
+            />
+          </div>
+        </div>
+        <p className="mt-3 text-[11px] leading-relaxed text-dim">
+          Changes here sync instantly to the native Android widget.
+        </p>
+      </Widget>
+
+      <Widget>
         <Label>Adding on Android</Label>
         <div className="mt-3 space-y-3">
           {[
@@ -153,7 +174,7 @@ export default function WidgetsModule() {
             ["02", "Choose your home screen", "Move or resize the widget like any other launcher widget."],
             ["03", "Open Motion OS once", "Your profile syncs to the native widget and stays on the device."],
           ].map(([number, title, copy]) => (
-            <div key={number} className="flex gap-3 rounded-2xl bg-black p-3.5">
+            <div key={number} className="flex gap-3 rounded-2xl bg-ink p-3.5">
               <span className="font-dot text-[13px] text-nred">{number}</span>
               <div>
                 <div className="text-[12px] text-paper">{title}</div>
@@ -170,7 +191,7 @@ export default function WidgetsModule() {
       <Widget>
         <Label>Built for a glance</Label>
         <div className="mt-3 space-y-3">
-          <div className="flex items-start gap-3 border-b border-white/[0.06] pb-3">
+          <div className="flex items-start gap-3 border-b border-paper/[0.06] pb-3">
             <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-nred" />
             <p className="text-[12px] leading-relaxed text-mute"><span className="text-paper">Live seconds:</span> Android's native Chronometer keeps the time moving without waking the full app every second.</p>
           </div>
