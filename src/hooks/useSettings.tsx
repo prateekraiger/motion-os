@@ -12,6 +12,8 @@ export interface Settings {
   yearView: YearView;
   lifeExpectancy: number;
   h24: boolean;
+  /** Whether the first-run flow has been completed. */
+  onboarded: boolean;
 }
 
 const KEY = "motion-os:settings:v1";
@@ -24,6 +26,7 @@ const DEFAULTS: Settings = {
   yearView: "dots",
   lifeExpectancy: 80,
   h24: true,
+  onboarded: false,
 };
 
 function load(): Settings {
@@ -31,7 +34,10 @@ function load(): Settings {
     const raw = localStorage.getItem(KEY);
     if (!raw) return DEFAULTS;
     const parsed = JSON.parse(raw) as Partial<Settings>;
-    return { ...DEFAULTS, ...parsed };
+    const merged = { ...DEFAULTS, ...parsed };
+    // Existing users who already set a birth moment are considered onboarded.
+    if (parsed.onboarded == null && parsed.birth) merged.onboarded = true;
+    return merged;
   } catch {
     return DEFAULTS;
   }

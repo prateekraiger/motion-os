@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSettings, type YearView } from "../hooks/useSettings";
+import { useStore } from "../hooks/useStore";
 import { parseLocal, toDateInput, toTimeInput } from "../lib/time";
-import { Widget, Label, Toggle, Segmented, PageIntro, StatusPill } from "./ui";
+import type { FocusConfig } from "../lib/types";
+import { Widget, Label, Toggle, Segmented, PageIntro, StatusPill, IconButton } from "./ui";
 import { cn } from "../utils/cn";
 
 function Row({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
@@ -16,16 +18,64 @@ function Row({ title, sub, children }: { title: string; sub?: string; children: 
   );
 }
 
+function Stepper({
+  value,
+  min,
+  max,
+  step = 1,
+  suffix,
+  onChange,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  suffix?: string;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <IconButton
+        aria-label="Decrease"
+        disabled={value <= min}
+        onClick={() => onChange(Math.max(min, value - step))}
+        className="border border-white/[0.1]"
+      >
+        <span className="text-lg leading-none">−</span>
+      </IconButton>
+      <span className="font-dot tnum w-14 text-center text-[20px] text-paper">
+        {value}
+        {suffix}
+      </span>
+      <IconButton
+        aria-label="Increase"
+        disabled={value >= max}
+        onClick={() => onChange(Math.min(max, value + step))}
+        className="border border-white/[0.1]"
+      >
+        <span className="text-lg leading-none">+</span>
+      </IconButton>
+    </div>
+  );
+}
+
 const inputCls =
   "w-full rounded-2xl border border-white/[0.08] bg-black px-4 py-3 text-[15px] text-paper outline-none focus:border-paper/60 placeholder:text-dim";
 
 export default function SettingsModule({ onResetDone }: { onResetDone?: () => void }) {
   const { settings, birthDate, update, reset } = useSettings();
+  const { focusConfig, updateFocusConfig, exportData, importData, clearAllData } = useStore();
   const [date, setDate] = useState(birthDate ? toDateInput(birthDate) : "");
   const [time, setTime] = useState(birthDate ? toTimeInput(birthDate) : "00:00");
   const [name, setName] = useState(settings.name);
   const [saved, setSaved] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [exportMsg, setExportMsg] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importMsg, setImportMsg] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!saved) return;
@@ -47,19 +97,60 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
     setSaved(true);
   };
 
+  const setFocus = (patch: Partial<FocusConfig>) => updateFocusConfig(patch);
+
+  const doExport = async () => {
+    const json = exportData();
+    try {
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `motion-os-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      /* download unavailable */
+    }
+    try {
+      await navigator.clipboard.writeText(json);
+      setExportMsg("Backup downloaded and copied to clipboard.");
+    } catch {
+      setExportMsg("Backup downloaded.");
+    }
+    setTimeout(() => setExportMsg(""), 2500);
+  };
+
+  const doImport = (text: string) => {
+    const ok = importData(text);
+    setImportMsg(ok ? "Data restored." : "Could not read that backup.");
+    if (ok) {
+      setImportText("");
+      setImportOpen(false);
+    }
+    setTimeout(() => setImportMsg(null), 2500);
+  };
+
+  const onFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => doImport(String(reader.result ?? ""));
+    reader.readAsText(file);
+  };
+
   return (
     <div className="flex flex-col gap-3 animate-fade-up">
       <PageIntro
         eyebrow="Preferences"
         title="Make it yours"
-        description="Tune the way Motion OS looks and counts. Changes are saved locally and mirrored to your Android widgets."
+        description="Tune how Motion OS counts, focuses, and looks. Everything is saved locally on this device."
       >
         <div className="mt-4 flex flex-wrap gap-2">
           <StatusPill>Stored locally</StatusPill>
-          <StatusPill>Nothing to sign in</StatusPill>
+          <StatusPill>No account needed</StatusPill>
         </div>
       </PageIntro>
 
+      {/* PROFILE */}
       <Widget className="pt-6">
         <Label red>Profile</Label>
         <div className="mt-4 space-y-3">
@@ -92,25 +183,48 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
         </div>
       </Widget>
 
+      {/* FOCUS TIMER */}
       <Widget>
-        <Label>Motion</Label>
+        <Label red>Focus timer</Label>
         <div className="mt-1">
-          <Row title="Show milliseconds" sub="60 fps counter in the Age module">
+          <Row title="Focus length" sub="Length of one deep-work block">
+            <Stepper value={focusConfig.workMin} min={5} max={90} step={5} suffix="m" onChange={(v) => setFocus({ workMin: v })} />
+          </Row>
+          <Row title="Short break">
+            <Stepper value={focusConfig.shortBreakMin} min={1} max={30} suffix="m" onChange={(v) => setFocus({ shortBreakMin: v })} />
+          </Row>
+          <Row title="Long break">
+            <Stepper value={focusConfig.longBreakMin} min={5} max={45} step={5} suffix="m" onChange={(v) => setFocus({ longBreakMin: v })} />
+          </Row>
+          <Row title="Blocks per long break" sub="Focus rounds before a long break">
+            <Stepper value={focusConfig.roundsBeforeLongBreak} min={2} max={8} onChange={(v) => setFocus({ roundsBeforeLongBreak: v })} />
+          </Row>
+          <Row title="Auto-start breaks" sub="Begin the break as soon as a block ends">
+            <Toggle checked={focusConfig.autoStartBreaks} onChange={(v) => setFocus({ autoStartBreaks: v })} label="Auto-start breaks" />
+          </Row>
+          <Row title="Auto-start focus" sub="Begin the next block after a break">
+            <Toggle checked={focusConfig.autoStartWork} onChange={(v) => setFocus({ autoStartWork: v })} label="Auto-start focus" />
+          </Row>
+          <Row title="Chime on finish" sub="Play a soft tone when a block completes">
+            <Toggle checked={focusConfig.sound} onChange={(v) => setFocus({ sound: v })} label="Chime on finish" />
+          </Row>
+        </div>
+      </Widget>
+
+      {/* MOTION */}
+      <Widget>
+        <Label>Display</Label>
+        <div className="mt-1">
+          <Row title="Show milliseconds" sub="60 fps counter in the Life clock">
             <Toggle checked={settings.showMs} onChange={(v) => update({ showMs: v })} label="Show milliseconds" />
           </Row>
-          <Row title="Motion blur" sub="Subtle blur on the fastest digits. Off = steady dim digits.">
+          <Row title="Motion blur" sub="Subtle blur on the fastest digits">
             <Toggle checked={settings.motionBlur} onChange={(v) => update({ motionBlur: v })} label="Motion blur" />
           </Row>
           <Row title="24-hour clock">
             <Toggle checked={settings.h24} onChange={(v) => update({ h24: v })} label="24-hour clock" />
           </Row>
-        </div>
-      </Widget>
-
-      <Widget>
-        <Label>Year in motion</Label>
-        <div className="mt-1">
-          <Row title="Default view">
+          <Row title="Year view">
             <Segmented<YearView>
               value={settings.yearView}
               options={[
@@ -123,38 +237,127 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
         </div>
       </Widget>
 
+      {/* LIFE HORIZON */}
       <Widget>
-        <Label>Age in motion</Label>
-        <div className="mt-1">
-          <div className="py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-[14px] text-paper">Life horizon</div>
-                <div className="mt-0.5 text-[11px] text-dim">Dots shown in the “Life in years” grid</div>
-              </div>
-              <span className="font-dot tnum text-2xl text-paper">{settings.lifeExpectancy}</span>
-            </div>
-            <input
-              type="range"
-              min={50}
-              max={120}
-              step={1}
-              value={settings.lifeExpectancy}
-              onChange={(e) => update({ lifeExpectancy: Number(e.target.value) })}
-              className="mt-4 w-full accent-white"
-            />
-            <div className="mt-1 flex justify-between">
-              <span className="label">50</span>
-              <span className="label">120</span>
-            </div>
+        <Label>Life horizon</Label>
+        <div className="py-4">
+          <div className="flex items-center justify-between">
+            <div className="text-[11px] text-dim">Dots shown in the “Life in years” grid</div>
+            <span className="font-dot tnum text-2xl text-paper">{settings.lifeExpectancy}</span>
+          </div>
+          <input
+            type="range"
+            min={50}
+            max={120}
+            step={1}
+            value={settings.lifeExpectancy}
+            onChange={(e) => update({ lifeExpectancy: Number(e.target.value) })}
+            className="mt-4 w-full accent-white"
+          />
+          <div className="mt-1 flex justify-between">
+            <span className="label">50</span>
+            <span className="label">120</span>
           </div>
         </div>
       </Widget>
 
+      {/* DATA */}
       <Widget>
         <Label>Data</Label>
         <div className="mt-1">
-          <Row title="Reset Motion OS" sub="Clears your profile and preferences from this device.">
+          <Row title="Back up data" sub="Download tasks, habits and focus history as JSON">
+            <button
+              type="button"
+              onClick={doExport}
+              className="rounded-full border border-white/[0.12] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-paper hover:bg-white/[0.06]"
+            >
+              Export
+            </button>
+          </Row>
+          <Row title="Restore data" sub="Load a backup file or paste JSON">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="rounded-full border border-white/[0.12] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-paper hover:bg-white/[0.06]"
+              >
+                File
+              </button>
+              <button
+                type="button"
+                onClick={() => setImportOpen((v) => !v)}
+                className="rounded-full border border-white/[0.12] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-paper hover:bg-white/[0.06]"
+              >
+                Paste
+              </button>
+            </div>
+          </Row>
+        </div>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onFile(f);
+            e.target.value = "";
+          }}
+        />
+        {importOpen && (
+          <div className="mt-3">
+            <textarea
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+              placeholder="Paste backup JSON here…"
+              rows={4}
+              className={cn(inputCls, "resize-none font-mono text-[12px]")}
+            />
+            <button
+              type="button"
+              onClick={() => doImport(importText)}
+              disabled={!importText.trim()}
+              className="mt-2 w-full rounded-full bg-paper py-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink disabled:bg-card-2 disabled:text-dim"
+            >
+              Import
+            </button>
+          </div>
+        )}
+        {(exportMsg || importMsg) && (
+          <p className="mt-3 text-[11px] text-mute" role="status">
+            {exportMsg || importMsg}
+          </p>
+        )}
+      </Widget>
+
+      {/* DANGER ZONE */}
+      <Widget>
+        <Label>Reset</Label>
+        <div className="mt-1">
+          <Row title="Clear tasks, habits & focus" sub="Removes all productivity data, keeps your profile">
+            {confirmClear ? (
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setConfirmClear(false)} className="rounded-full border border-line px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-mute">
+                  No
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearAllData();
+                    setConfirmClear(false);
+                  }}
+                  className="rounded-full bg-nred px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-paper"
+                >
+                  Clear
+                </button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setConfirmClear(true)} className="rounded-full border border-nred/60 px-4 py-2 text-[10px] uppercase tracking-[0.16em] text-nred">
+                Clear
+              </button>
+            )}
+          </Row>
+          <Row title="Reset everything" sub="Clears your profile and all preferences from this device">
             {confirm ? (
               <div className="flex gap-2">
                 <button type="button" onClick={() => setConfirm(false)} className="rounded-full border border-line px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-mute">
@@ -163,6 +366,7 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
                 <button
                   type="button"
                   onClick={() => {
+                    clearAllData();
                     reset();
                     setConfirm(false);
                     onResetDone?.();
@@ -183,7 +387,7 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
 
       <div className="px-2 pb-2 text-center">
         <div className="font-dot text-[14px] text-mute">MOTION OS</div>
-        <div className="label mt-1">v1.0 · Stored locally · No accounts</div>
+        <div className="label mt-1">v2.0 · Productivity · Stored locally</div>
       </div>
     </div>
   );

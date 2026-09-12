@@ -1,25 +1,20 @@
 # Motion OS
 
-> See time while it is happening.
+> Make time count.
 
-Motion OS is a quiet, personal time dashboard for two questions:
+Motion OS is a quiet, private productivity app built around one idea: awareness of time should lead to action. It pairs a calm task/focus/habit workflow with a "time in motion" perspective — your day, your year, and your life.
 
-1. **How much life have I lived?** — a live age clock with calendar-accurate years, months, days, hours, minutes, seconds, and optional milliseconds.
-2. **Where am I in this year?** — a year clock with day, week, month, quarter, and year progress.
-
-The app is intentionally simple: set one birth moment, then use the Life clock, Year clock, or a home-screen widget whenever you want a little context.
+Everything is stored locally on the device. There are no accounts, no servers, and no analytics.
 
 ## What is included
 
-- A focused mobile-first interface with clear Life, Year, Widgets, and Preferences sections.
-- Calendar-aware age arithmetic, including leap years, clamped February 29 anniversaries, and daylight-saving-safe day stepping.
-- Six-decimal year progress and dot-based visualisations for years, days, months, quarters, and life horizon.
-- Native Android home-screen widgets:
-  - **Age in motion** — a 2 × 2 life clock with a native `Chronometer` for moving seconds.
-  - **Year in motion** — a 4 × 2 year-progress widget with day counts and a native progress bar.
-- One-tap launcher pinning from the Widgets screen using Android's `requestPinAppWidget` API. Manual launcher instructions remain available for launchers that do not support pinning requests.
-- Android 16-ready widget metadata: exported providers, previews, resize support, and a 30-minute host refresh period for calendar values.
-- Local-only profile and preferences. The Android bridge mirrors only the birth epoch, display name, and clock format needed to draw widgets.
+- **Today** — a dashboard that greets you, shows how much of the day is left, surfaces your next tasks and habits, and puts a one-tap focus timer front and centre.
+- **Tasks** — capture, prioritise (low / medium / high), set due dates, and complete tasks. Filter by Today, Upcoming, All, or Done, and see a live completion rate.
+- **Focus** — a Pomodoro-style timer with a live dot-ring, configurable work/break lengths, long-break cycles, auto-start, and a soft completion chime. Every block is logged, and you can attach a task so focus time counts toward it.
+- **Habits** — daily habit tracking with weekly goals, current/best streaks, a tappable week row, and a 28-day trail. Six accent colours per habit.
+- **Perspective** — the original Motion OS clocks: a live **Life clock** (age down to the millisecond) and a **Year clock** (day, week, month, quarter, year progress). The birthday is optional.
+- **Home-screen widgets** — native Android "Age in motion" and "Year in motion" widgets.
+- **Backup & restore** — export all data to a JSON file (or clipboard) and import it back.
 - Reduced-motion support, safe-area spacing, keyboard-friendly controls, and accessible labels/focus states.
 
 ## Development
@@ -60,21 +55,32 @@ If a launcher does not support the in-app pin request, long-press an empty home-
 
 ```text
 src/
-├── App.tsx                         # App shell, navigation, and onboarding gate
+├── App.tsx                         # App shell, 5-tab navigation, sub-view routing
 ├── index.css                       # Theme, typography, motion, safe-area helpers
 ├── lib/
-│   ├── time.ts                     # Calendar and progress engine
+│   ├── time.ts                     # Calendar, progress, and formatting engine
+│   ├── types.ts                    # Task / Habit / Focus data models
+│   ├── productivity.ts             # Pure helpers: streaks, sorting, aggregations
+│   ├── nav.ts                      # Navigation view/tab types
 │   └── nativeWidgets.ts            # Defensive Capacitor Android bridge
 ├── hooks/
 │   ├── useNow.ts                   # Visibility-aware live clock
-│   └── useSettings.tsx             # Local settings and native widget sync
+│   ├── useLocalStorage.ts          # Persisted state + id helper
+│   ├── useSettings.tsx             # Profile, preferences, native widget sync
+│   └── useStore.tsx                # Tasks, habits, focus sessions, global timer
 └── components/
-    ├── ui.tsx                     # Cards, numeric displays, dots, controls
-    ├── Onboarding.tsx             # Clear first-run explanation and profile setup
-    ├── AgeModule.tsx              # Life clock
-    ├── YearModule.tsx             # Year clock
+    ├── ui.tsx                      # Cards, numeric displays, dots, controls, inputs
+    ├── icons.tsx                   # Shared inline SVG icon set
+    ├── Onboarding.tsx              # First-run flow (birthday optional)
+    ├── TodayModule.tsx             # Dashboard
+    ├── TasksModule.tsx             # Task management
+    ├── FocusModule.tsx             # Pomodoro focus timer
+    ├── HabitsModule.tsx            # Habit tracking
+    ├── MoreModule.tsx              # Hub for perspective, widgets, preferences
+    ├── AgeModule.tsx               # Life clock
+    ├── YearModule.tsx              # Year clock
     ├── WidgetsModule.tsx           # Native widget actions and previews
-    └── SettingsModule.tsx          # Profile and display preferences
+    └── SettingsModule.tsx          # Profile, focus config, data, reset
 
 android/app/src/main/
 ├── java/com/motionos/app/

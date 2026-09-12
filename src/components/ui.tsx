@@ -1,5 +1,6 @@
-import { memo, type ReactNode, type CSSProperties } from "react";
+import { memo, type ReactNode, type CSSProperties, type ButtonHTMLAttributes } from "react";
 import { cn } from "../utils/cn";
+import { CheckIcon } from "./icons";
 
 /* ------------------------------------------------------------------ */
 /* Widget container (Nothing OS style)                                 */
@@ -22,9 +23,9 @@ export function Widget({
       onClick={onClick}
       style={style}
       className={cn(
-        "relative overflow-hidden rounded-[28px] border border-white/[0.06] p-5",
+        "relative overflow-hidden rounded-[28px] border border-white/[0.06] p-5 transition-all duration-300 ease-out",
         glass ? "bg-black/55 backdrop-blur-xl" : "bg-card",
-        onClick && "cursor-pointer active:scale-[0.985] transition-transform",
+        onClick && "cursor-pointer active:scale-[0.97] hover:border-white/[0.15] hover:shadow-[0_4px_24px_rgba(0,0,0,0.5)]",
         className,
       )}
     >
@@ -56,7 +57,7 @@ export function PageIntro({
   return (
     <div className="px-2 pb-2 pt-4">
       <Label red>{eyebrow}</Label>
-      <h1 className="font-dot mt-4 max-w-[12ch] text-[34px] leading-[0.98] text-paper">{title}</h1>
+      <h1 className="font-dot mt-4 text-[34px] leading-[0.98] text-paper whitespace-nowrap overflow-hidden text-ellipsis">{title}</h1>
       <p className="mt-3 max-w-[38ch] text-[13px] leading-relaxed text-mute">{description}</p>
       {children}
     </div>
@@ -82,9 +83,9 @@ export function ActionButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "inline-flex min-h-11 items-center justify-center rounded-full px-4 text-[10px] font-semibold uppercase tracking-[0.16em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/80 disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex min-h-11 items-center justify-center rounded-full px-4 text-[10px] font-semibold uppercase tracking-[0.16em] transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/80 disabled:cursor-not-allowed disabled:opacity-50 hover:shadow-lg",
         secondary
-          ? "border border-white/[0.12] bg-white/[0.04] text-paper hover:bg-white/[0.1] active:scale-[0.98]"
+          ? "border border-white/[0.12] bg-white/[0.04] text-paper hover:bg-white/[0.15] active:scale-[0.98]"
           : "bg-paper text-ink hover:bg-white/85 active:scale-[0.98]",
         className,
       )}
@@ -96,8 +97,8 @@ export function ActionButton({
 
 export function StatusPill({ children, red = false }: { children: ReactNode; red?: boolean }) {
   return (
-    <span className={cn("inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-medium uppercase tracking-[0.16em]", red ? "border-nred/40 text-nred" : "border-white/[0.1] text-mute")}>
-      <span className={cn("h-1.5 w-1.5 rounded-full", red ? "bg-nred animate-dot-pulse" : "bg-mute")} />
+    <span className={cn("inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-medium uppercase tracking-[0.16em]", red ? "border-nred/40 text-nred shadow-[0_0_12px_rgba(255,0,0,0.15)]" : "border-white/[0.1] text-mute")}>
+      <span className={cn("h-1.5 w-1.5 rounded-full", red ? "bg-nred animate-dot-pulse shadow-[0_0_8px_rgba(255,0,0,0.8)]" : "bg-mute")} />
       {children}
     </span>
   );
@@ -331,6 +332,183 @@ export function GlyphDots({ className }: { className?: string }) {
       <span className="h-1 w-1 rounded-full bg-paper" />
       <span className="h-1 w-1 rounded-full bg-mute" />
       <span className="h-1 w-1 rounded-full bg-dim" />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Circular checkbox                                                   */
+/* ------------------------------------------------------------------ */
+export function Checkbox({
+  checked,
+  onChange,
+  label,
+  accent,
+  size = 24,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  label?: string;
+  accent?: string;
+  size?: number;
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={onChange}
+      style={{ width: size, height: size, borderColor: checked ? accent ?? undefined : undefined, background: checked ? accent ?? undefined : undefined }}
+      className={cn(
+        "relative flex shrink-0 items-center justify-center rounded-full border-2 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/70",
+        checked ? "border-paper bg-paper text-ink" : "border-line text-transparent hover:border-mute",
+      )}
+    >
+      <CheckIcon className="h-3.5 w-3.5" strokeWidth={3} />
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Icon button                                                         */
+/* ------------------------------------------------------------------ */
+export function IconButton({
+  children,
+  className,
+  tone = "ghost",
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & { tone?: "ghost" | "solid" | "danger" }) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        "inline-flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/70 disabled:opacity-40",
+        tone === "ghost" && "text-mute hover:bg-white/[0.06] hover:text-paper",
+        tone === "solid" && "bg-paper text-ink hover:bg-white/85",
+        tone === "danger" && "text-mute hover:bg-nred/15 hover:text-nred",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Empty state                                                         */
+/* ------------------------------------------------------------------ */
+export function EmptyState({
+  icon,
+  title,
+  description,
+  action,
+}: {
+  icon?: ReactNode;
+  title: string;
+  description?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
+      {icon && (
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.08] bg-black text-mute">
+          {icon}
+        </div>
+      )}
+      <div className="font-dot text-[18px] text-paper">{title}</div>
+      {description && <p className="mt-2 max-w-[30ch] text-[12px] leading-relaxed text-dim">{description}</p>}
+      {action && <div className="mt-5">{action}</div>}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Section header with optional trailing action                        */
+/* ------------------------------------------------------------------ */
+export function SectionHeader({
+  title,
+  count,
+  action,
+  className,
+}: {
+  title: string;
+  count?: number | string;
+  action?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex items-center justify-between px-2", className)}>
+      <div className="flex items-center gap-2">
+        <span className="label">{title}</span>
+        {count != null && <span className="font-dot tnum text-[12px] text-dim">{count}</span>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
+const PRIORITY_COLOR: Record<string, string> = {
+  high: "bg-nred",
+  med: "bg-paper",
+  low: "bg-dim",
+};
+
+export function PriorityDot({ priority, className }: { priority: "low" | "med" | "high"; className?: string }) {
+  return <span className={cn("inline-block h-2 w-2 shrink-0 rounded-full", PRIORITY_COLOR[priority], priority === "high" && "shadow-[0_0_8px_rgba(255,0,0,0.8)]", className)} />;
+}
+
+/* ------------------------------------------------------------------ */
+/* Chip / small pill button                                            */
+/* ------------------------------------------------------------------ */
+export function Chip({
+  children,
+  active,
+  onClick,
+  className,
+}: {
+  children: ReactNode;
+  active?: boolean;
+  onClick?: () => void;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors",
+        active ? "border-paper bg-paper text-ink" : "border-white/[0.1] text-mute hover:border-white/25 hover:text-paper",
+        className,
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Stat tile — compact metric block                                    */
+/* ------------------------------------------------------------------ */
+export function StatTile({
+  value,
+  label,
+  sub,
+  accent,
+  className,
+}: {
+  value: string | number;
+  label: string;
+  sub?: string;
+  accent?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={cn("rounded-2xl bg-black px-3.5 py-3.5", className)}>
+      <Num value={value} className={cn("text-[26px]", accent ? "text-nred" : "text-paper")} />
+      <div className="label mt-1.5">{label}</div>
+      {sub && <div className="mt-0.5 text-[10px] text-dim">{sub}</div>}
     </div>
   );
 }

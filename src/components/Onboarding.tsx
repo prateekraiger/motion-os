@@ -3,6 +3,7 @@ import { useNow } from "../hooks/useNow";
 import { useSettings } from "../hooks/useSettings";
 import { parseLocal, toDateInput } from "../lib/time";
 import { Num } from "./ui";
+import { FlameIcon, ListIcon, SunIcon, TargetIcon } from "./icons";
 import { cn } from "../utils/cn";
 
 const inputCls =
@@ -17,13 +18,17 @@ export default function Onboarding() {
   const [time, setTime] = useState("00:00");
 
   const parsed = parseLocal(date, time);
-  const valid = !!parsed && parsed.getTime() <= Date.now();
+  const dateValid = !date || (!!parsed && parsed.getTime() <= Date.now());
   const d = new Date(now);
   const ms = String(d.getMilliseconds()).padStart(3, "0");
 
-  const start = () => {
-    if (!valid || !parsed) return;
-    update({ birth: parsed.toISOString(), name: name.trim() });
+  const finish = () => {
+    if (!dateValid) return;
+    update({
+      name: name.trim(),
+      birth: parsed && date ? parsed.toISOString() : null,
+      onboarded: true,
+    });
   };
 
   return (
@@ -33,29 +38,32 @@ export default function Onboarding() {
           <div className="animate-fade-up">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-nred shadow-[0_0_14px_rgba(255,0,0,0.65)] animate-dot-pulse" />
-              <span className="label text-paper">A personal time dashboard</span>
+              <span className="label text-paper">A personal productivity OS</span>
             </div>
-            <h1 className="font-dot mt-6 text-[56px] leading-[0.9] text-paper min-[380px]:text-[64px]">
-              TIME,
+            <h1 className="font-dot mt-6 text-[52px] leading-[0.9] text-paper min-[380px]:text-[60px]">
+              MAKE TIME
               <br />
-              IN MOTION.
+              COUNT.
             </h1>
-            <p className="mt-6 max-w-[33ch] text-[15px] leading-relaxed text-mute">
-              Motion OS makes time visible: the life you have lived, the year you are in, and the next moment worth
-              noticing.
+            <p className="mt-6 max-w-[34ch] text-[15px] leading-relaxed text-mute">
+              Motion OS turns awareness of time into action: plan your tasks, focus in blocks, build habits, and see the
+              bigger picture — all in one calm, private place.
             </p>
 
             <div className="mt-8 overflow-hidden rounded-[28px] border border-white/[0.07] bg-card">
               {[
-                ["01", "Life clock", "Your age, moving in real time"],
-                ["02", "Year clock", "The shape of this year, at a glance"],
-                ["03", "Home widgets", "A quiet reminder on your launcher"],
-              ].map(([number, title, copy]) => (
-                <div key={number} className="flex items-center gap-4 border-b border-white/[0.06] px-5 py-4 last:border-0">
-                  <span className="font-dot text-[14px] text-nred">{number}</span>
+                [<ListIcon className="h-4 w-4" />, "Tasks", "Capture and prioritise what matters"],
+                [<TargetIcon className="h-4 w-4" />, "Focus", "Work in blocks, track every minute"],
+                [<FlameIcon className="h-4 w-4" />, "Habits", "Build streaks, one day at a time"],
+                [<SunIcon className="h-4 w-4" />, "Perspective", "Your day, year, and life in motion"],
+              ].map(([icon, title, copy], i) => (
+                <div key={i} className="flex items-center gap-4 border-b border-white/[0.06] px-5 py-4 last:border-0">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-black text-nred">
+                    {icon}
+                  </span>
                   <div>
-                    <div className="text-[13px] text-paper">{title}</div>
-                    <div className="mt-0.5 text-[11px] text-dim">{copy}</div>
+                    <div className="text-[14px] text-paper">{title as string}</div>
+                    <div className="mt-0.5 text-[11px] text-dim">{copy as string}</div>
                   </div>
                 </div>
               ))}
@@ -66,18 +74,7 @@ export default function Onboarding() {
                 <rect x="5" y="10" width="14" height="10" rx="2" />
                 <path d="M8 10V7a4 4 0 0 1 8 0v3" />
               </svg>
-              Your details stay on this device.
-            </div>
-
-            <div className="mt-8 rounded-[28px] border border-white/[0.06] bg-card p-5">
-              <div className="label">Right now</div>
-              <div className="mt-2 flex items-baseline gap-1">
-                <Num
-                  value={`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`}
-                  className="text-[38px] text-paper"
-                />
-                <Num value={`.${ms}`} className="ms-motion text-[18px] text-mute" />
-              </div>
+              Everything stays on this device. No accounts, no cloud.
             </div>
 
             <button
@@ -85,7 +82,7 @@ export default function Onboarding() {
               onClick={() => setStep(1)}
               className="mt-8 w-full rounded-full bg-paper py-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-ink transition-transform hover:bg-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/80 active:scale-[0.98]"
             >
-              Set up my clocks <span className="ml-1">→</span>
+              Get started <span className="ml-1">→</span>
             </button>
           </div>
         ) : (
@@ -93,10 +90,10 @@ export default function Onboarding() {
             <button type="button" onClick={() => setStep(0)} className="label mb-6 text-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/80">
               ← Back
             </button>
-            <h2 className="font-dot text-[38px] leading-[0.95] text-paper min-[380px]:text-[42px]">START WITH ONE MOMENT.</h2>
+            <h2 className="font-dot text-[36px] leading-[0.95] text-paper min-[380px]:text-[40px]">A FEW BASICS.</h2>
             <p className="mt-4 text-[13px] leading-relaxed text-mute">
-              Add your birth moment to start the life clock. Time is optional; using it makes the counter more precise.
-              You can change everything later.
+              Tell us your name so the app can greet you. Adding your birthday unlocks the Life clock — it's optional and
+              you can add it later in Preferences.
             </p>
 
             <div className="mt-8 space-y-4">
@@ -111,38 +108,51 @@ export default function Onboarding() {
                   autoComplete="given-name"
                 />
               </div>
-              <div>
-                <div className="label mb-2">Date of birth</div>
-                <input
-                  className={inputCls}
-                  type="date"
-                  value={date}
-                  max={toDateInput(new Date())}
-                  onChange={(e) => setDate(e.target.value)}
-                  aria-describedby={date && !valid ? "birth-error" : undefined}
-                />
+              <div className="grid grid-cols-[1.4fr_1fr] gap-3">
+                <div>
+                  <div className="label mb-2">Birthday (optional)</div>
+                  <input
+                    className={inputCls}
+                    type="date"
+                    value={date}
+                    max={toDateInput(new Date())}
+                    onChange={(e) => setDate(e.target.value)}
+                    aria-describedby={date && !dateValid ? "birth-error" : undefined}
+                  />
+                </div>
+                <div>
+                  <div className="label mb-2">Time</div>
+                  <input className={inputCls} type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+                </div>
               </div>
-              <div>
-                <div className="label mb-2">Time of birth</div>
-                <input className={inputCls} type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-              </div>
-              {!valid && date && (
+              {!dateValid && (
                 <div id="birth-error" className="text-[11px] text-nred" role="alert">
-                  Please enter a valid date and time in the past.
+                  Please enter a date in the past.
                 </div>
               )}
             </div>
 
+            <div className="mt-8 rounded-[24px] border border-white/[0.06] bg-card p-5">
+              <div className="label">Right now</div>
+              <div className="mt-2 flex items-baseline gap-1">
+                <Num
+                  value={`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`}
+                  className="text-[34px] text-paper"
+                />
+                <Num value={`.${ms}`} className="ms-motion text-[16px] text-mute" />
+              </div>
+            </div>
+
             <button
               type="button"
-              onClick={start}
-              disabled={!valid}
+              onClick={finish}
+              disabled={!dateValid}
               className={cn(
                 "mt-8 w-full rounded-full py-4 text-[11px] font-semibold uppercase tracking-[0.22em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/80",
-                valid ? "bg-paper text-ink hover:bg-white/85 active:scale-[0.98]" : "bg-card-2 text-dim",
+                dateValid ? "bg-paper text-ink hover:bg-white/85 active:scale-[0.98]" : "bg-card-2 text-dim",
               )}
             >
-              Start the clock
+              Enter Motion OS
             </button>
           </div>
         )}

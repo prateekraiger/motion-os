@@ -11,7 +11,8 @@ import {
   fmtDate,
   MS,
 } from "../lib/time";
-import { Widget, Label, Num, DotBar, DotGrid, DotRing, StatRow, GlyphDots, PageIntro, StatusPill } from "./ui";
+import { Widget, Label, Num, DotBar, DotGrid, DotRing, StatRow, GlyphDots, PageIntro, StatusPill, EmptyState } from "./ui";
+import { SunIcon } from "./icons";
 import { cn } from "../utils/cn";
 
 function Cell({ value, label, className }: { value: string; label: string; className?: string }) {
@@ -28,6 +29,25 @@ export default function AgeModule() {
   const now = useNow("raf");
   const birth = birthDate ?? new Date(2000, 0, 1);
   const nowDate = useMemo(() => new Date(now), [now]);
+
+  if (!birthDate) {
+    return (
+      <div className="flex flex-col gap-3 animate-fade-up">
+        <PageIntro
+          eyebrow="Life clock"
+          title="See your life in motion"
+          description="Add your date of birth to start a live count of the time you've lived, down to the second."
+        />
+        <Widget>
+          <EmptyState
+            icon={<SunIcon className="h-6 w-6" />}
+            title="No birthday set"
+            description="Open More → Preferences and add your date of birth to unlock the Life clock."
+          />
+        </Widget>
+      </div>
+    );
+  }
 
   const age = computeAge(birth, nowDate);
   const nb = nextBirthday(birth, nowDate);

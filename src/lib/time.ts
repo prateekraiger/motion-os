@@ -282,3 +282,76 @@ export function toDateInput(d: Date) {
 export function toTimeInput(d: Date) {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
+/* ------------------------------------------------------------------ */
+/* Productivity helpers                                                */
+/* ------------------------------------------------------------------ */
+
+/** Local calendar-day key, e.g. "2026-09-12". Stable across timezones. */
+export const dateKey = (d: Date = new Date()) => toDateInput(d);
+
+export const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+export function isSameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+/** Whole-day difference (b - a), ignoring time-of-day. */
+export function diffDays(a: Date, b: Date) {
+  const ua = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+  const ub = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((ub - ua) / MS.day);
+}
+
+/** Parse a "YYYY-MM-DD" day key back to a local Date at midnight. */
+export function parseDateKey(key: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return null;
+  const [y, m, d] = key.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+
+/** Friendly relative label for a due-date key relative to `ref`. */
+export function relativeDay(key: string, ref: Date = new Date()): string {
+  const d = parseDateKey(key);
+  if (!d) return "";
+  const delta = diffDays(startOfDay(ref), d);
+  if (delta === 0) return "Today";
+  if (delta === 1) return "Tomorrow";
+  if (delta === -1) return "Yesterday";
+  if (delta < -1) return `${Math.abs(delta)}d overdue`;
+  if (delta < 7) return `${DAYS_LONG[d.getDay()]}`;
+  return `${pad(d.getDate())} ${MONTHS_SHORT[d.getMonth()]}`;
+}
+
+export const DAYS_LONG = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** Compact clock for timers: mm:ss, or h:mm:ss past an hour. */
+export function fmtClock(totalMs: number) {
+  const t = Math.max(0, Math.round(totalMs / 1000));
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const s = t % 60;
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+
+/** Human-friendly duration, e.g. "1h 20m", "45m", "30s". */
+export function fmtDuration(totalMs: number) {
+  const t = Math.max(0, Math.round(totalMs / 1000));
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const s = t % 60;
+  if (h > 0) return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  if (m > 0) return `${m}m`;
+  return `${s}s`;
+}
+
+/** Greeting based on the hour of day. */
+export function greeting(d: Date = new Date()) {
+  const h = d.getHours();
+  if (h < 5) return "Still up";
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  if (h < 22) return "Good evening";
+  return "Good night";
+}
