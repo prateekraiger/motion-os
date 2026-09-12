@@ -1,4 +1,4 @@
-package com.motionos.app;
+package io.motionos.app;
 
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;

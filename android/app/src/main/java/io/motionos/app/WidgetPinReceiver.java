@@ -1,4 +1,4 @@
-package com.motionos.app;
+package io.motionos.app;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
