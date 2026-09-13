@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1 × n — the single-cell column. Nothing but the lived number. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/age_widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:clickable="true"
+    android:contentDescription="@string/age_widget_description"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/age_widget_dot"
+        android:layout_width="7dp"
+        android:layout_height="7dp"
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/widget_dot_now_dark" />
+
+    <TextView
+        android:id="@+id/age_widget_years"
+        style="@style/WidgetType.Dot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="6dp"
+        android:text="26"
+        android:textSize="22sp" />
+
+    <TextView
+        android:id="@+id/age_widget_unit"
+        style="@style/WidgetType.Label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="3dp"
+        android:text="YEARS"
+        android:textSize="7sp" />
+</LinearLayout>

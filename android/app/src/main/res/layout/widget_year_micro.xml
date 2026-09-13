@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1 × n — the single-cell column. The year's percentage, nothing else. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/year_widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:clickable="true"
+    android:contentDescription="@string/year_widget_description"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/year_widget_dot"
+        android:layout_width="7dp"
+        android:layout_height="7dp"
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/widget_dot_now_dark" />
+
+    <TextView
+        android:id="@+id/year_widget_percent"
+        style="@style/WidgetType.Dot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="6dp"
+        android:text="68%"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/year_widget_year"
+        style="@style/WidgetType.Label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="3dp"
+        android:text="2026"
+        android:textSize="7sp" />
+</LinearLayout>

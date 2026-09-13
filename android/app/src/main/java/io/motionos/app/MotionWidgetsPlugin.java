@@ -27,7 +27,15 @@ public class MotionWidgetsPlugin extends Plugin {
 
         String name = call.getString("name", "");
         Boolean h24Value = call.getBoolean("h24", true);
-        MotionWidgetData.save(getContext(), birthEpochMs, name, h24Value == null || h24Value);
+        String theme = call.getString("theme", MotionWidgetTheme.SYSTEM);
+        Integer expectancy = call.getInt("lifeExpectancy", 0);
+        MotionWidgetData.save(
+                getContext(),
+                birthEpochMs,
+                name,
+                h24Value == null || h24Value,
+                theme,
+                expectancy == null ? 0 : expectancy);
         MotionWidgetData.refreshAll(getContext());
         call.resolve();
     }

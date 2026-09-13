@@ -99,8 +99,8 @@ export default function MoreModule({ onNavigate }: { onNavigate: (v: View) => vo
         />
         <NavRow
           icon={<ClockIcon className="h-5 w-5" />}
-          title="Home-screen widgets"
-          sub="Add live clocks to your Android launcher"
+          title="Home & lock-screen widgets"
+          sub="Five native formats in the app's dot voice"
           onClick={() => onNavigate("widgets")}
         />
         <NavRow

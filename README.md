@@ -15,7 +15,7 @@ Everything is stored locally on the device. There are no accounts, no servers, a
 - **Habits** — daily habit tracking with weekly goals, current/best streaks, a tappable week row, and a 28-day trail. Six accent colours per habit.
 - **Stats & history** — a 7-day view of focus time, task completions and habit consistency (week-over-week focus, best day, per-habit streaks), under More.
 - **Perspective** — the original Motion OS clocks: a live **Life clock** (age down to the millisecond) and a **Year clock** (day, week, month, quarter, year progress). The birthday is optional.
-- **Home-screen widgets** — native Android "Age in motion" and "Year in motion" widgets.
+- **Home & lock-screen widgets** — native Android "Age in motion" and "Year in motion" widgets in five responsive formats (1 × 1, 2 × 1, 2 × 2, 4 × 2, 4 × 4), rendered in the same dot-matrix typeface as the app and offered to lock-screen widget hosts as well.
 - **Backup & restore** — export all data to a JSON file (or clipboard) and import it back. Imports from older versions are normalised automatically.
 - **Themes** — follow your system, or force dark / light from Preferences.
 - Reduced-motion support, safe-area spacing, keyboard-friendly controls, and accessible labels/focus states.
@@ -47,10 +47,35 @@ No APK is committed to this repository. Build the APK locally when you are ready
 The WebView's `localStorage` is not readable by an `AppWidgetProvider`, so the app uses a small Capacitor plugin boundary:
 
 - `src/lib/nativeWidgets.ts` exposes `syncSettings` and `requestPinWidget` to the web layer.
-- `MotionWidgetsPlugin` stores the minimum widget data in native `SharedPreferences` and refreshes both providers.
-- `AgeWidgetProvider` and `YearWidgetProvider` render standard `RemoteViews` layouts.
-- The age widget delegates live seconds to Android's `Chronometer`; it does not start a JavaScript timer in the background.
+- `MotionWidgetsPlugin` stores the minimum widget data (birth moment, name, 12/24 h, surface theme, life expectancy) in native `SharedPreferences` and refreshes both providers.
+- `AgeWidgetProvider` and `YearWidgetProvider` render `RemoteViews` layouts, one per size bucket.
+- The age widget delegates live seconds to Android's `Chronometer`; the year widget's clock is a `TextClock`. Both tick inside the launcher process, so no JavaScript timer runs in the background.
 - Tapping either widget opens Motion OS. Updating settings or resetting the profile immediately refreshes existing widgets.
+
+### Responsive formats
+
+Each provider serves five layouts keyed to launcher footprints (dips, for a typical 5 × 4 handset grid):
+
+| Format | Cells | Typical footprint | Contents |
+| --- | --- | --- | --- |
+| 1 × 1 | micro | 57 × 102 | one number and the live dot |
+| 2 × 1 | strip | 130 × 102 | number, unit, live seconds |
+| 2 × 2 | small | 203 × 220 | header, hero, seconds, month rail |
+| 4 × 2 | wide | 276 × 220 | the square, roomier |
+| 4 × 4 | large | 276 × 456 | hero, seconds, month rail, life line |
+
+On Android 12+ the provider hands the launcher a `Map<SizeF, RemoteViews>`; the launcher inflates the closest fitting layout and swaps it while the user resizes, without waking the app. On older versions the provider reads `OPTION_APPWIDGET_MIN_WIDTH/HEIGHT` and re-renders in `onAppWidgetOptionsChanged`. `MotionWidgetSize.pick` mirrors the framework's own closest-fit rule and is covered by unit tests.
+
+### Type, dots and theme
+
+- Numerals use **Doto**, the app's dot-matrix face, bundled as a static instance (`res/font/doto.ttf`, ROND 100 / wght 800, SIL OFL 1.1 — licence in `res/raw/doto_license.txt`). Font resources resolve in the launcher process from Android 8; older releases fall back to the platform monospace face via `values/styles.xml` vs `values-v26/styles.xml`.
+- Progress is a twelve-dot month rail (`res/layout/widget_rail.xml`); each dot is an `ImageView` repainted with `setImageViewResource`, so the rail never depends on font metrics.
+- The saved surface preference (auto / light / dark) is resolved by `MotionWidgetTheme` into a palette and painted with remotable setters (`setBackgroundResource`, `setTextColor`, `setImageViewResource`). The in-app gallery previews use the same palette, so what you see is what the launcher shows.
+- Refreshes come from the 30-minute update cycle, the exempt `TIME_SET` / `TIMEZONE_CHANGED` / `LOCALE_CHANGED` broadcasts, and one inexact midnight alarm (`ACTION_WIDGET_DAY_ROLL`) so day counters roll over on time.
+
+### Lock screen
+
+Both providers declare `android:widgetCategory="home_screen|keyguard"`. Lock-screen widget hosts (Pixel Tablet, and Pixel phones on Android 16 QPR2 and newer) can therefore place them on the lock screen; every other launcher simply keeps them on the home screen. Older Android versions removed keyguard widgets entirely, so nothing changes there.
 
 If a launcher does not support the in-app pin request, long-press an empty home-screen area, choose **Widgets**, then choose **Motion OS**. The providers are declared in `AndroidManifest.xml`, so they are visible to the system widget picker after the app is installed.
 
@@ -85,21 +110,25 @@ src/
     ├── MoreModule.tsx              # Hub for perspective, stats, widgets, preferences
     ├── AgeModule.tsx               # Life clock
     ├── YearModule.tsx              # Year clock
-    ├── WidgetsModule.tsx           # Native widget actions and previews
+    ├── WidgetsModule.tsx           # Widget gallery: formats, lock screen, surface theme
+    ├── widgetPreviews.tsx          # Faithful web previews of every native widget format
     └── SettingsModule.tsx          # Profile, notifications, theme, focus config, data, reset
 
 android/app/src/main/
-├── java/com/motionos/app/
+├── java/io/motionos/app/
 │   ├── MainActivity.java
-│   ├── MotionWidgetsPlugin.java
-│   ├── MotionWidgetData.java
-│   ├── AgeWidgetProvider.java
-│   ├── YearWidgetProvider.java
+│   ├── MotionWidgetsPlugin.java    # Capacitor bridge: settings → SharedPreferences
+│   ├── MotionWidgetData.java       # Calendar maths, rail + theme painting, day-roll alarm
+│   ├── MotionWidgetSize.java       # Size buckets and the closest-fit picker
+│   ├── MotionWidgetTheme.java      # Saved surface preference → widget palette
+│   ├── AgeWidgetProvider.java      # Life clock, five layouts
+│   ├── YearWidgetProvider.java     # Year clock, five layouts
 │   └── WidgetPinReceiver.java
 └── res/
-    ├── layout/widget_age.xml      # 2 × 2 RemoteViews layout
-    ├── layout/widget_year.xml     # 4 × 2 RemoteViews layout
-    └── xml/*_widget_info.xml      # Launcher discovery metadata
+    ├── font/doto.ttf              # Doto instance (ROND 100 / wght 800), OFL 1.1
+    ├── layout/widget_{age,year}_{micro,strip,small,wide,large}.xml
+    ├── layout/widget_rail.xml     # Shared twelve-dot rail
+    └── xml/*_widget_info.xml      # Launcher discovery metadata, home + keyguard
 ```
 
 ## Design direction
@@ -110,6 +139,7 @@ Motion OS uses a monochrome, dot-led visual language with one red signal for the
 - Doto for large displays and Inter for labels and supporting copy.
 - Dots represent completed units; the red dot is the unit currently in motion.
 - Milliseconds are available in-app, but home-screen widgets use OS-managed seconds because launcher widgets cannot repaint at 60 fps.
+- The native widgets bundle the same Doto face (as a static font resource), so the dot voice survives outside the WebView.
 
 ## Recurrence & reminder semantics
 

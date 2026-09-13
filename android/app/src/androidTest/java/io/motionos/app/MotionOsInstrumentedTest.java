@@ -1,4 +1,4 @@
-package com.motionos.app;
+package io.motionos.app;
 
 import static org.junit.Assert.*;
 
@@ -21,6 +21,6 @@ public class MotionOsInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        assertEquals("com.motionos.app", appContext.getPackageName());
+        assertEquals("io.motionos.app", appContext.getPackageName());
     }
 }

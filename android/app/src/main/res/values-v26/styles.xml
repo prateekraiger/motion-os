@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 8+ can bind a font resource to a TextView through RemoteViews, so the
+  widget numerals use the same Doto dot-matrix face as the app itself. The
+  file is a static instance pinned to ROND 100 / wght 800 (round, heavy dots),
+  generated from the variable font and bundled in res/font (OFL 1.1).
+-->
+<resources>
+    <style name="WidgetType.Dot" parent="WidgetType">
+        <item name="android:fontFamily">@font/doto</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+</resources>

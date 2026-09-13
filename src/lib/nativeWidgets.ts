@@ -8,6 +8,7 @@ interface MotionWidgetsPlugin {
     name: string;
     h24: boolean;
     theme?: string;
+    lifeExpectancy?: number;
   }): Promise<void>;
   requestPinWidget(options: { kind: WidgetKind }): Promise<{
     requested: boolean;
@@ -29,6 +30,7 @@ export async function syncNativeWidgetSettings(options: {
   name: string;
   h24: boolean;
   widgetTheme?: string;
+  lifeExpectancy?: number;
 }) {
   if (!isAndroidNative()) return;
 
@@ -38,6 +40,7 @@ export async function syncNativeWidgetSettings(options: {
       name: options.name,
       h24: options.h24,
       theme: options.widgetTheme || "system",
+      lifeExpectancy: options.lifeExpectancy ?? 0,
     });
   } catch {
     // A widget should never make the main app fail. It can be synced again

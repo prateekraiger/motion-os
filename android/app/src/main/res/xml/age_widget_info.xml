@@ -1,10 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Life clock widget. Resizable from a single cell column (1 × n) up to a full
+  4 × 4 panel; the provider serves a matching layout per size bucket and the
+  launcher picks the closest fit on Android 12+, or the provider re-renders on
+  older versions. `keyguard` makes the widget available to lock-screen widget
+  hosts (Android 16 QPR2 / Pixel Tablet communal space); hosts that do not
+  support it simply ignore the flag.
+-->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/age_widget_description"
-    android:initialLayout="@layout/widget_age"
+    android:initialLayout="@layout/widget_age_small"
+    android:initialKeyguardLayout="@layout/widget_age_strip"
+    android:maxResizeHeight="470dp"
+    android:maxResizeWidth="400dp"
     android:minHeight="110dp"
-    android:minWidth="180dp"
+    android:minResizeHeight="50dp"
+    android:minResizeWidth="56dp"
+    android:minWidth="130dp"
     android:previewImage="@drawable/widget_preview_age"
+    android:previewLayout="@layout/widget_age_small"
     android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="2"
+    android:targetCellWidth="2"
     android:updatePeriodMillis="1800000"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen|keyguard" />

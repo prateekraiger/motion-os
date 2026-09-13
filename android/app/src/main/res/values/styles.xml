@@ -32,4 +32,45 @@
         <item name="android:background">@color/colorPrimary</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
+
+    <!--
+      Widget typography.
+      One voice: Doto (dot matrix) for every numeral, the platform sans for
+      micro labels and supporting copy. RemoteViews cannot load a custom
+      Typeface at runtime, so the face is bound here via a font resource —
+      which resolves in the launcher process on Android 8 (API 26) and newer.
+      Older devices fall back to the platform monospace face (values/ here),
+      see values-v26/styles.xml for the Doto override.
+      Note: text colour is painted by MotionWidgetTheme at render time so the
+      widget can follow the saved theme preference; these values are only the
+      pre-render defaults (dark surface).
+    -->
+    <style name="WidgetType">
+        <item name="android:textColor">@color/widget_text</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- Numerals. Overridden in values-v26 with @font/doto. -->
+    <style name="WidgetType.Dot" parent="WidgetType">
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Micro uppercase labels with wide tracking. -->
+    <style name="WidgetType.Label" parent="WidgetType">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/widget_muted</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.16</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- Supporting copy. -->
+    <style name="WidgetType.Body" parent="WidgetType">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/widget_muted</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:ellipsize">end</item>
+    </style>
 </resources>

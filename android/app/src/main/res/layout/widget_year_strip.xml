@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- n × 1 — one row strip: year, percentage, live local time. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/year_widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:clickable="true"
+    android:contentDescription="@string/year_widget_description"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="12dp"
+    android:paddingTop="6dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="6dp">
+
+    <ImageView
+        android:id="@+id/year_widget_dot"
+        android:layout_width="7dp"
+        android:layout_height="7dp"
+        android:src="@drawable/widget_dot_now_dark" />
+
+    <TextView
+        android:id="@+id/year_widget_year"
+        style="@style/WidgetType.Dot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="2026"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/year_widget_percent"
+        style="@style/WidgetType.Body"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="7dp"
+        android:layout_weight="1"
+        android:text="68.42%"
+        android:textSize="9sp" />
+
+    <TextClock
+        android:id="@+id/year_widget_clock"
+        style="@style/WidgetType.Dot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:format12Hour="h:mm a"
+        android:format24Hour="HH:mm"
+        android:gravity="end|center_vertical"
+        android:text="12:00"
+        android:textSize="11sp" />
+</LinearLayout>
