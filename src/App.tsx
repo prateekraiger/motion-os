@@ -12,8 +12,11 @@ import HabitsModule from "./components/HabitsModule";
 import MoreModule from "./components/MoreModule";
 import AgeModule from "./components/AgeModule";
 import YearModule from "./components/YearModule";
+import StatsModule from "./components/StatsModule";
 import WidgetsModule from "./components/WidgetsModule";
 import SettingsModule from "./components/SettingsModule";
+import ReminderToast from "./components/ReminderToast";
+import { useReminders } from "./hooks/useReminders";
 import { ChevronLeft, FlameIcon, ListIcon, SunIcon, TargetIcon } from "./components/icons";
 import { cn } from "./utils/cn";
 
@@ -37,6 +40,7 @@ const TAB_META: Record<MainTab, { label: string; icon: (active: boolean) => Reac
 const SUB_TITLES: Partial<Record<View, string>> = {
   life: "Life clock",
   year: "Year clock",
+  stats: "Stats & history",
   widgets: "Home widgets",
   settings: "Preferences",
 };
@@ -98,6 +102,7 @@ function isMainTab(v: View): v is MainTab {
 function Shell() {
   const { settings } = useSettings();
   const [view, setView] = useState<View>("today");
+  const reminder = useReminders();
 
   if (!settings.onboarded) return <Onboarding />;
 
@@ -110,6 +115,16 @@ function Shell() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col sm:border-x sm:border-paper/[0.06]">
+      {reminder.alert && (
+        <ReminderToast
+          task={reminder.alert.task}
+          onView={() => {
+            reminder.dismiss();
+            navigate("tasks");
+          }}
+          onDismiss={reminder.dismiss}
+        />
+      )}
       <Header view={view} onBack={() => navigate("more")} />
 
       <main id="main-content" className="flex-1 px-3 pb-32 pt-1">
@@ -120,6 +135,7 @@ function Shell() {
         {view === "more" && <MoreModule onNavigate={navigate} />}
         {view === "life" && <AgeModule />}
         {view === "year" && <YearModule />}
+        {view === "stats" && <StatsModule />}
         {view === "widgets" && <WidgetsModule />}
         {view === "settings" && <SettingsModule onResetDone={() => navigate("today")} />}
       </main>

@@ -103,18 +103,18 @@ export default function FocusModule() {
 
         {/* controls */}
         <div className="mt-6 flex items-center gap-4">
-          <IconButton aria-label="Reset" onClick={resetTimer} className="h-12 w-12 border border-white/[0.1]">
+          <IconButton aria-label="Reset" onClick={resetTimer} className="h-12 w-12 border border-paper[0.1]">
             <ResetIcon className="h-5 w-5" />
           </IconButton>
           <button
             type="button"
             onClick={running ? pauseTimer : startTimer}
             aria-label={running ? "Pause" : "Start"}
-            className="flex h-[68px] w-[68px] items-center justify-center rounded-full bg-paper text-ink shadow-[0_8px_30px_rgba(255,255,255,0.15)] transition-transform active:scale-95"
+            className="flex h-[68px] w-[68px] items-center justify-center rounded-full bg-paper text-ink shadow-[0_8px_30px_var(--color-shadow)] transition-transform active:scale-95"
           >
             {running ? <PauseIcon className="h-7 w-7" /> : <PlayIcon className="ml-0.5 h-7 w-7" />}
           </button>
-          <IconButton aria-label="Skip" onClick={skipPhase} className="h-12 w-12 border border-white/[0.1]">
+          <IconButton aria-label="Skip" onClick={skipPhase} className="h-12 w-12 border border-paper[0.1]">
             <SkipIcon className="h-5 w-5" />
           </IconButton>
         </div>
@@ -132,7 +132,7 @@ export default function FocusModule() {
             )}
           </div>
           {linkedTask ? (
-            <div className="mt-3 flex items-center gap-3 rounded-2xl bg-black px-4 py-3">
+            <div className="mt-3 flex items-center gap-3 rounded-2xl bg-ink px-4 py-3">
               <TargetIcon className="h-5 w-5 text-nred" />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[15px] text-paper">{linkedTask.title}</div>
@@ -177,7 +177,7 @@ export default function FocusModule() {
                 const task = tasks.find((t) => t.id === s.taskId);
                 const d = new Date(s.startedAt);
                 return (
-                  <div key={s.id} className="flex items-center justify-between border-b border-white/[0.05] py-2.5 last:border-0">
+                  <div key={s.id} className="flex items-center justify-between border-b border-paper/[0.05] py-2.5 last:border-0">
                     <div className="flex items-center gap-3">
                       <span className={cn("h-1.5 w-1.5 rounded-full", s.completed ? "bg-nred" : "bg-dim")} />
                       <span className="text-[13px] text-mute">{task ? task.title : "Focus block"}</span>

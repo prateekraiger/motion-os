@@ -54,7 +54,7 @@ function Composer({ onClose }: { onClose: () => void }) {
         onKeyDown={(e) => e.key === "Enter" && submit()}
         placeholder="e.g. Read 20 minutes"
         maxLength={40}
-        className="mt-4 w-full rounded-2xl border border-white/[0.08] bg-black px-4 py-3 text-[15px] text-paper outline-none focus:border-paper/60 placeholder:text-dim"
+        className="mt-4 w-full rounded-2xl border border-paper/[0.08] bg-ink px-4 py-3 text-[15px] text-paper outline-none focus:border-paper/60 placeholder:text-dim"
       />
 
       <div className="mt-4 flex items-center gap-2.5">
@@ -76,11 +76,11 @@ function Composer({ onClose }: { onClose: () => void }) {
       <div className="mt-5 flex items-center justify-between">
         <div className="label">Weekly goal</div>
         <div className="flex items-center gap-3">
-          <IconButton aria-label="Less" onClick={() => setTarget((t) => Math.max(1, t - 1))} className="border border-white/[0.1]">
+          <IconButton aria-label="Less" onClick={() => setTarget((t) => Math.max(1, t - 1))} className="border border-paper[0.1]">
             <span className="text-lg leading-none">−</span>
           </IconButton>
           <span className="font-dot tnum w-14 text-center text-[22px] text-paper">{target}×</span>
-          <IconButton aria-label="More" onClick={() => setTarget((t) => Math.min(7, t + 1))} className="border border-white/[0.1]">
+          <IconButton aria-label="More" onClick={() => setTarget((t) => Math.min(7, t + 1))} className="border border-paper[0.1]">
             <span className="text-lg leading-none">+</span>
           </IconButton>
         </div>
@@ -160,7 +160,7 @@ function HabitCard({ habit }: { habit: Habit }) {
       </div>
 
       {/* 28-day trail */}
-      <div className="mt-4 flex items-center gap-2 border-t border-white/[0.06] pt-4">
+      <div className="mt-4 flex items-center gap-2 border-t border-paper/[0.06] pt-4">
         <span className="label shrink-0">28d</span>
         <div className="flex flex-1 items-center justify-between">
           {trail.map((key) => {
@@ -239,7 +239,7 @@ export default function HabitsModule() {
         <button
           type="button"
           onClick={() => setComposing(true)}
-          className="flex items-center justify-center gap-2 rounded-[28px] border border-dashed border-white/[0.14] py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-mute transition-colors hover:border-paper/40 hover:text-paper"
+          className="flex items-center justify-center gap-2 rounded-[28px] border border-dashed border-paper/[0.14] py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-mute transition-colors hover:border-paper/40 hover:text-paper"
         >
           <PlusIcon className="h-4 w-4" /> New habit
         </button>

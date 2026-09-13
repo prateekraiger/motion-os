@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { useSettings, type YearView } from "../hooks/useSettings";
+import { useSettings, type AppTheme, type YearView } from "../hooks/useSettings";
 import { useStore } from "../hooks/useStore";
+import { webNotificationState, webNotificationsSupported, type NotifState } from "../hooks/useReminders";
 import { parseLocal, toDateInput, toTimeInput } from "../lib/time";
 import type { FocusConfig } from "../lib/types";
 import { Widget, Label, Toggle, Segmented, PageIntro, StatusPill, IconButton } from "./ui";
@@ -65,6 +66,7 @@ const inputCls =
 export default function SettingsModule({ onResetDone }: { onResetDone?: () => void }) {
   const { settings, birthDate, update, reset } = useSettings();
   const { focusConfig, updateFocusConfig, exportData, importData, clearAllData } = useStore();
+  const [notifState, setNotifState] = useState<NotifState>(() => webNotificationState());
   const [date, setDate] = useState(birthDate ? toDateInput(birthDate) : "");
   const [time, setTime] = useState(birthDate ? toTimeInput(birthDate) : "00:00");
   const [name, setName] = useState(settings.name);
@@ -211,10 +213,62 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
         </div>
       </Widget>
 
+      {/* REMINDERS & NOTIFICATIONS */}
+      <Widget>
+        <Label>Reminders & notifications</Label>
+        <div className="mt-1">
+          <Row
+            title="In-app reminder banners"
+            sub="Shown at the top of the app when a task reminder is due"
+          >
+            <StatusPill>Always on</StatusPill>
+          </Row>
+          <Row
+            title="Browser notifications"
+            sub="Also alert you when Motion OS isn't the focused window (when supported)"
+          >
+            {notifState === "granted" ? (
+              <StatusPill>On</StatusPill>
+            ) : notifState === "denied" ? (
+              <span className="text-[11px] text-dim">Blocked by browser</span>
+            ) : notifState === "unsupported" ? (
+              <span className="text-[11px] text-dim">Not supported here</span>
+            ) : (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!webNotificationsSupported()) return;
+                  try {
+                    await Notification.requestPermission();
+                  } catch {
+                    /* permission request unavailable */
+                  }
+                  setNotifState(webNotificationState());
+                }}
+                className="rounded-full border border-paper/[0.12] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-paper hover:bg-paper/[0.06]"
+              >
+                Enable
+              </button>
+            )}
+          </Row>
+        </div>
+      </Widget>
+
       {/* MOTION */}
       <Widget>
         <Label>Display</Label>
         <div className="mt-1">
+          <Row title="Theme" sub="Follow your system, or force dark or light">
+            <Segmented<AppTheme>
+              value={settings.theme}
+              options={[
+                { value: "system", label: "Auto" },
+                { value: "dark", label: "Dark" },
+                { value: "light", label: "Light" },
+              ]}
+              onChange={(v) => update({ theme: v })}
+            />
+          </Row>
           <Row title="Show milliseconds" sub="60 fps counter in the Life clock">
             <Toggle checked={settings.showMs} onChange={(v) => update({ showMs: v })} label="Show milliseconds" />
           </Row>

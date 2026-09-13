@@ -80,7 +80,7 @@ export default function Onboarding() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="mt-8 w-full rounded-full bg-paper py-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-ink transition-transform hover:bg-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/80 active:scale-[0.98]"
+              className="mt-8 w-full rounded-full bg-paper py-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-ink transition-transform hover:bg-paper/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/80 active:scale-[0.98]"
             >
               Get started <span className="ml-1">→</span>
             </button>
@@ -132,7 +132,7 @@ export default function Onboarding() {
               )}
             </div>
 
-            <div className="mt-8 rounded-[24px] border border-white/[0.06] bg-card p-5">
+            <div className="mt-8 rounded-[24px] border border-paper[0.06] bg-card p-5">
               <div className="label">Right now</div>
               <div className="mt-2 flex items-baseline gap-1">
                 <Num
@@ -149,7 +149,7 @@ export default function Onboarding() {
               disabled={!dateValid}
               className={cn(
                 "mt-8 w-full rounded-full py-4 text-[11px] font-semibold uppercase tracking-[0.22em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/80",
-                dateValid ? "bg-paper text-ink hover:bg-white/85 active:scale-[0.98]" : "bg-card-2 text-dim",
+                dateValid ? "bg-paper text-ink hover:bg-paper/85 active:scale-[0.98]" : "bg-card-2 text-dim",
               )}
             >
               Enter Motion OS

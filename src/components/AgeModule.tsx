@@ -104,7 +104,7 @@ export default function AgeModule() {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-y-5 border-t border-white/[0.06] pt-5">
+        <div className="mt-6 grid grid-cols-3 gap-y-5 border-t border-paper/[0.06] pt-5">
           <Cell value={pad(age.months)} label="months" />
           <Cell value={pad(age.days)} label="days" />
           <Cell value={pad(age.hours)} label="hours" />
