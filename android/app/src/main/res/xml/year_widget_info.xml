@@ -1,10 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Year clock widget. Default footprint is 4 × 2; resizable from a single cell
+  column up to a 4 × 4 panel, and offered to lock-screen widget hosts as well.
+-->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/year_widget_description"
-    android:initialLayout="@layout/widget_year"
+    android:initialLayout="@layout/widget_year_wide"
+    android:initialKeyguardLayout="@layout/widget_year_strip"
+    android:maxResizeHeight="470dp"
+    android:maxResizeWidth="400dp"
     android:minHeight="110dp"
-    android:minWidth="240dp"
+    android:minResizeHeight="50dp"
+    android:minResizeWidth="56dp"
+    android:minWidth="276dp"
     android:previewImage="@drawable/widget_preview_year"
+    android:previewLayout="@layout/widget_year_wide"
     android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="2"
+    android:targetCellWidth="4"
     android:updatePeriodMillis="1800000"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen|keyguard" />

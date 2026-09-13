@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dot rail: twelve dots, one per month of the measured period. Each dot is an
+  ImageView whose src is swapped by MotionWidgetData.applyRail, so the rail is
+  immune to font metrics and scales evenly across every widget size.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rail_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:importantForAccessibility="noHideDescendants"
+    android:orientation="horizontal">
+    <ImageView
+        android:id="@+id/rail_0"
+        android:layout_width="0dp"
+        android:layout_height="7dp"
+        android:layout_weight="1"
+        android:src="@drawable/widget_dot_off_dark" />
+    <ImageView
+        android:id="@+id/rail_1"
+        android:layout_width="0dp"
+        android:layout_height="7dp"
+        android:layout_weight="1"
+        android:src="@drawable/widget_dot_off_dark" />
+    <ImageView
+        android:id="@+id/rail_2"
+        android:layout_width="0dp"
+        android:layout_height="7dp"
+        android:layout_weight="1"
+        android:src="@drawable/widget_dot_off_dark" />
+    <ImageView
+        android:id="@+id/rail_3"
+        android:layout_width="0dp"
+        android:layout_height="7dp"
+        android:layout_weight="1"
+        android:src="@drawable/widget_dot_off_dark" />
+    <ImageView
+        android:id="@+id/rail_4"
+        android:layout_width="0dp"
+        android:layout_height="7dp"
+        android:layout_weight="1"
+        android:src="@drawable/widget_dot_off_dark" />
+    <ImageView
+        android:id="@+id/rail_5"
+        android:layout_width="0dp"
+        android:layout_height="7dp"
+        android:layout_weight="1"
+        android:src="@drawable/widget_dot_off_dark" />
+    <ImageView
+        android:id="@+id/rail_6"
+        android:layout_width="0dp"
+        android:layout_height="7dp"
+        android:layout_weight="1"
+        android:src="@drawable/widget_dot_off_dark" />
+    <ImageView
+        android:id="@+id/rail_7"
+        android:layout_width="0dp"
+        android:layout_height="7dp"
+        android:layout_weight="1"
+        android:src="@drawable/widget_dot_off_dark" />
+    <ImageView
+        android:id="@+id/rail_8"
+        android:layout_width="0dp"
+        android:layout_height="7dp"
+        android:layout_weight="1"
+        android:src="@drawable/widget_dot_off_dark" />
+    <ImageView
+        android:id="@+id/rail_9"
+        android:layout_width="0dp"
+        android:layout_height="7dp"
+        android:layout_weight="1"
+        android:src="@drawable/widget_dot_off_dark" />
+    <ImageView
+        android:id="@+id/rail_10"
+        android:layout_width="0dp"
+        android:layout_height="7dp"
+        android:layout_weight="1"
+        android:src="@drawable/widget_dot_off_dark" />
+    <ImageView
+        android:id="@+id/rail_11"
+        android:layout_width="0dp"
+        android:layout_height="7dp"
+        android:layout_weight="1"
+        android:src="@drawable/widget_dot_off_dark" />
+</LinearLayout>

@@ -23,9 +23,20 @@
         </activity>
 
         <!-- Native home-screen widgets. Exported is required so the launcher can discover them. -->
+        <!--
+          TIME_SET / TIMEZONE_CHANGED / LOCALE_CHANGED are exempt from the
+          Android 8 implicit-broadcast restriction, so a manifest receiver may
+          still listen for them: they keep the live counters honest when the
+          system clock, zone or locale changes. ACTION_WIDGET_DAY_ROLL is our
+          own (inexact alarm) broadcast that flips the day counters at midnight.
+        -->
         <receiver android:name=".AgeWidgetProvider" android:exported="true" android:label="@string/age_widget_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
+                <action android:name="io.motionos.app.ACTION_WIDGET_DAY_ROLL" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/age_widget_info" />
         </receiver>
@@ -33,6 +44,10 @@
         <receiver android:name=".YearWidgetProvider" android:exported="true" android:label="@string/year_widget_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
+                <action android:name="io.motionos.app.ACTION_WIDGET_DAY_ROLL" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/year_widget_info" />
         </receiver>

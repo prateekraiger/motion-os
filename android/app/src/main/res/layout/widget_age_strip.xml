@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- n × 1 — one row strip: the lived number with its live seconds. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/age_widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:clickable="true"
+    android:contentDescription="@string/age_widget_description"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="12dp"
+    android:paddingTop="6dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="6dp">
+
+    <ImageView
+        android:id="@+id/age_widget_dot"
+        android:layout_width="7dp"
+        android:layout_height="7dp"
+        android:src="@drawable/widget_dot_now_dark" />
+
+    <TextView
+        android:id="@+id/age_widget_years"
+        style="@style/WidgetType.Dot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="26"
+        android:textSize="22sp" />
+
+    <TextView
+        android:id="@+id/age_widget_unit"
+        style="@style/WidgetType.Label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_weight="1"
+        android:text="YEARS"
+        android:textSize="8sp" />
+
+    <Chronometer
+        android:id="@+id/age_widget_elapsed"
+        style="@style/WidgetType.Dot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="end|center_vertical"
+        android:text="12:00:00"
+        android:textSize="11sp" />
+</LinearLayout>
