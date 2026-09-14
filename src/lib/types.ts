@@ -24,6 +24,18 @@ export interface Task {
   timesDone: number;
 }
 
+export type Mood = 1 | 2 | 3 | 4 | 5;
+
+export interface JournalEntry {
+  id: string;
+  /** Date key ("YYYY-MM-DD") */
+  dateKey: string;
+  mood: Mood | null;
+  content: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface Habit {
   id: string;
   name: string;
@@ -74,6 +86,8 @@ export interface FocusConfig {
   autoStartBreaks: boolean;
   autoStartWork: boolean;
   sound: boolean;
+  ambientSound: "none" | "white" | "pink" | "brown";
+  ambientVolume: number;
 }
 
 export interface ProductivityData {
@@ -82,6 +96,7 @@ export interface ProductivityData {
   sessions: FocusSession[];
   timer: FocusTimer;
   focusConfig: FocusConfig;
+  journals: JournalEntry[];
 }
 
 export const HABIT_COLORS = ["#ff0000", "#ffffff", "#3b82f6", "#22c55e", "#f59e0b", "#a855f7"] as const;

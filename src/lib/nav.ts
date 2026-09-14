@@ -8,7 +8,8 @@ export type View =
   | "year"
   | "stats"
   | "widgets"
-  | "settings";
+  | "settings"
+  | "journal";
 
 export type MainTab = "today" | "tasks" | "focus" | "habits" | "more";
 

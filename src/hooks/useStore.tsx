@@ -27,6 +27,7 @@ const KEYS = {
   sessions: "motion-os:sessions:v1",
   timer: "motion-os:timer:v1",
   focusConfig: "motion-os:focus-config:v1",
+  journals: "motion-os:journals:v1",
 };
 
 const DEFAULT_CONFIG: FocusConfig = {
@@ -37,6 +38,8 @@ const DEFAULT_CONFIG: FocusConfig = {
   autoStartBreaks: true,
   autoStartWork: false,
   sound: true,
+  ambientSound: "none",
+  ambientVolume: 0.5,
 };
 
 const DEFAULT_TIMER: FocusTimer = {
@@ -76,6 +79,7 @@ interface StoreCtx {
   sessions: FocusSession[];
   timer: FocusTimer;
   focusConfig: FocusConfig;
+  journals: JournalEntry[];
 
   // Tasks
   addTask: (input: {
@@ -105,6 +109,9 @@ interface StoreCtx {
   setTimerTask: (id: string | null) => void;
   setFocusPhase: (phase: FocusPhase) => void;
   updateFocusConfig: (patch: Partial<FocusConfig>) => void;
+
+  // Journals
+  upsertJournal: (dateKey: string, patch: Partial<Omit<JournalEntry, "id" | "dateKey" | "createdAt" | "updatedAt">>) => void;
 
   // Data
   exportData: () => string;
@@ -143,6 +150,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useLocalStorage<FocusSession[]>(KEYS.sessions, []);
   const [timer, setTimer] = useLocalStorage<FocusTimer>(KEYS.timer, DEFAULT_TIMER);
   const [focusConfig, setFocusConfig] = useLocalStorage<FocusConfig>(KEYS.focusConfig, DEFAULT_CONFIG);
+  const [journals, setJournals] = useLocalStorage<JournalEntry[]>(KEYS.journals, []);
 
   const configRef = useRef(focusConfig);
   configRef.current = focusConfig;
@@ -426,10 +434,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => window.clearInterval(id);
   }, [timer.status, timer.endsAt, completePhase]);
 
+  /* --------------------------- Journals ---------------------------- */
+  const upsertJournal: StoreCtx["upsertJournal"] = useCallback(
+    (dateKey, patch) => {
+      setJournals((prev) => {
+        const existingIdx = prev.findIndex((j) => j.dateKey === dateKey);
+        if (existingIdx >= 0) {
+          const next = [...prev];
+          next[existingIdx] = { ...next[existingIdx], ...patch, updatedAt: Date.now() };
+          return next;
+        } else {
+          return [
+            ...prev,
+            {
+              id: uid(),
+              dateKey,
+              mood: patch.mood ?? null,
+              content: patch.content ?? "",
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+            },
+          ];
+        }
+      });
+    },
+    [setJournals],
+  );
+
   /* --------------------------- Data -------------------------------- */
   const exportData = useCallback(
-    () => JSON.stringify({ version: 1, tasks, habits, sessions, focusConfig }, null, 2),
-    [tasks, habits, sessions, focusConfig],
+    () => JSON.stringify({ version: 1, tasks, habits, sessions, focusConfig, journals }, null, 2),
+    [tasks, habits, sessions, focusConfig, journals],
   );
 
   const importData = useCallback(
@@ -441,21 +476,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (Array.isArray(data.tasks)) setTasks(data.tasks.map(normalizeTask));
         if (Array.isArray(data.habits)) setHabits(data.habits);
         if (Array.isArray(data.sessions)) setSessions(data.sessions);
+        if (Array.isArray(data.journals)) setJournals(data.journals);
         if (data.focusConfig) setFocusConfig({ ...DEFAULT_CONFIG, ...data.focusConfig });
         return true;
       } catch {
         return false;
       }
     },
-    [setTasks, setHabits, setSessions, setFocusConfig],
+    [setTasks, setHabits, setSessions, setJournals, setFocusConfig],
   );
 
   const clearAllData = useCallback(() => {
     setTasks([]);
     setHabits([]);
     setSessions([]);
+    setJournals([]);
     setTimer(DEFAULT_TIMER);
-  }, [setTasks, setHabits, setSessions, setTimer]);
+  }, [setTasks, setHabits, setSessions, setJournals, setTimer]);
+
 
   const value = useMemo<StoreCtx>(
     () => ({
@@ -464,6 +502,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       sessions,
       timer,
       focusConfig,
+      journals,
       addTask,
       updateTask,
       toggleTask,
@@ -481,6 +520,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setTimerTask,
       setFocusPhase,
       updateFocusConfig,
+      upsertJournal,
       exportData,
       importData,
       clearAllData,
@@ -491,6 +531,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       sessions,
       timer,
       focusConfig,
+      journals,
       addTask,
       updateTask,
       toggleTask,
@@ -508,6 +549,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setTimerTask,
       setFocusPhase,
       updateFocusConfig,
+      upsertJournal,
       exportData,
       importData,
       clearAllData,

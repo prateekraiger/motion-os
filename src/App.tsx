@@ -15,6 +15,7 @@ import YearModule from "./components/YearModule";
 import StatsModule from "./components/StatsModule";
 import WidgetsModule from "./components/WidgetsModule";
 import SettingsModule from "./components/SettingsModule";
+import JournalModule from "./components/JournalModule";
 import ReminderToast from "./components/ReminderToast";
 import { useReminders } from "./hooks/useReminders";
 import { ChevronLeft, FlameIcon, ListIcon, SunIcon, TargetIcon } from "./components/icons";
@@ -43,6 +44,7 @@ const SUB_TITLES: Partial<Record<View, string>> = {
   stats: "Stats & history",
   widgets: "Home widgets",
   settings: "Preferences",
+  journal: "Journal & Mood",
 };
 
 function FocusIndicator() {
@@ -138,6 +140,7 @@ function Shell() {
         {view === "stats" && <StatsModule />}
         {view === "widgets" && <WidgetsModule />}
         {view === "settings" && <SettingsModule onResetDone={() => navigate("today")} />}
+        {view === "journal" && <JournalModule />}
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-safe" aria-label="Primary navigation">

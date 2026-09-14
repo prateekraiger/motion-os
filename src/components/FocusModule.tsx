@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useNow } from "../hooks/useNow";
 import { useStore } from "../hooks/useStore";
+import { useAmbientSound } from "../hooks/useAmbientSound";
 import { focusMsOn, phaseDurationMs, sessionsOn } from "../lib/productivity";
 import { clamp, dateKey, fmtClock, fmtDuration } from "../lib/time";
 import type { FocusPhase } from "../lib/types";
@@ -26,8 +27,11 @@ const PHASE_META: Record<FocusPhase, { label: string; hint: string }> = {
 };
 
 export default function FocusModule() {
-  const { timer, focusConfig, sessions, tasks, startTimer, pauseTimer, resetTimer, skipPhase, setTimerTask, setFocusPhase } =
+  const { timer, focusConfig, sessions, tasks, startTimer, pauseTimer, resetTimer, skipPhase, setTimerTask, setFocusPhase, updateFocusConfig } =
     useStore();
+  
+  // Start ambient sound engine
+  useAmbientSound();
   const now = useNow(timer.status === "running" ? 4 : 1);
 
   const total = phaseDurationMs(timer.phase, focusConfig);
@@ -154,6 +158,37 @@ export default function FocusModule() {
           )}
         </Widget>
       )}
+
+      {/* AMBIENT SOUND */}
+      <Widget>
+        <Label>Ambient Sound</Label>
+        <div className="mt-4">
+          <Segmented<"none" | "white" | "pink" | "brown">
+            value={focusConfig.ambientSound}
+            options={[
+              { value: "none", label: "Off" },
+              { value: "white", label: "White" },
+              { value: "pink", label: "Pink" },
+              { value: "brown", label: "Brown" },
+            ]}
+            onChange={(v) => updateFocusConfig({ ambientSound: v })}
+          />
+          {focusConfig.ambientSound !== "none" && (
+            <div className="mt-4 flex items-center gap-3">
+              <span className="text-[12px] text-mute">Volume</span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={focusConfig.ambientVolume}
+                onChange={(e) => updateFocusConfig({ ambientVolume: parseFloat(e.target.value) })}
+                className="flex-1 accent-nred bg-paper/10 appearance-none h-1 rounded-full outline-none"
+              />
+            </div>
+          )}
+        </div>
+      </Widget>
 
       {/* TODAY STATS */}
       <Widget>
