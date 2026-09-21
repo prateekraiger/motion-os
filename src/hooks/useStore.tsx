@@ -18,6 +18,7 @@ import type {
   Priority,
   Repeat,
   Task,
+  JournalEntry,
 } from "../lib/types";
 import { HABIT_COLORS } from "../lib/types";
 
@@ -70,6 +71,7 @@ function normalizeTask(raw: unknown): Task {
     remindAt: typeof t.remindAt === "string" ? t.remindAt : null,
     repeat: t.repeat === "daily" || t.repeat === "weekly" ? t.repeat : "none",
     timesDone: typeof t.timesDone === "number" ? t.timesDone : 0,
+    subtasks: Array.isArray(t.subtasks) ? t.subtasks : [],
   };
 }
 
@@ -176,6 +178,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           remindAt: null,
           repeat,
           timesDone: 0,
+          subtasks: [],
         },
         ...prev,
       ]);

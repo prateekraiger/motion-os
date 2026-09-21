@@ -1,6 +1,12 @@
 export type Priority = "low" | "med" | "high";
 export type Repeat = "none" | "daily" | "weekly";
 
+export interface Subtask {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -22,6 +28,8 @@ export interface Task {
   repeat: Repeat;
   /** How many times this task has been completed (recurrence history). */
   timesDone: number;
+  /** Checklist items for this task. */
+  subtasks: Subtask[];
 }
 
 export type Mood = 1 | 2 | 3 | 4 | 5;

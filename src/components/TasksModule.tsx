@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "../hooks/useStore";
+import { uid } from "../hooks/useLocalStorage";
 import { useSettings } from "../hooks/useSettings";
 import { isOverdue, sortTasks, tasksCompletedOn } from "../lib/productivity";
 import { dateKey, fmtTime, parseLocal, relativeDay, toDateInput, toTimeInput } from "../lib/time";
@@ -143,6 +144,15 @@ function TaskRow({ task }: { task: Task }) {
   const [notes, setNotes] = useState(task.notes);
   const [rDate, setRDate] = useState("");
   const [rTime, setRTime] = useState("09:00");
+  const subtasks = task.subtasks || [];
+
+  function renderTitle(title: string) {
+    const parts = title.split(/(#[\w-]+)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith("#")) return <span key={i} className="text-nred">{part}</span>;
+      return <span key={i}>{part}</span>;
+    });
+  }
 
   // Keep local editor state in sync with the store (e.g. after import/reset).
   useEffect(() => {
@@ -189,7 +199,7 @@ function TaskRow({ task }: { task: Task }) {
             className="block w-full text-left"
           >
             <span className={cn("block truncate text-[15px]", task.done ? "text-dim line-through" : "text-paper")}>
-              {task.title}
+              {renderTitle(task.title)}
             </span>
           </button>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -237,6 +247,12 @@ function TaskRow({ task }: { task: Task }) {
                 {task.spent} focus{task.spent > 1 ? "es" : ""}
               </span>
             )}
+            {subtasks.length > 0 && (
+              <span className="flex items-center gap-1 text-[10px] uppercase tracking-[0.12em] text-dim">
+                <ListIcon className="h-3 w-3" />
+                {subtasks.filter((s) => s.done).length}/{subtasks.length}
+              </span>
+            )}
             {task.notes.trim() !== "" && <NoteIcon className="h-3 w-3 text-dim" />}
           </div>
         </div>
@@ -270,6 +286,52 @@ function TaskRow({ task }: { task: Task }) {
               placeholder="Add notes… (private, stored on this device)"
               className={cn(panelInputCls, "resize-none")}
             />
+          </div>
+
+          {/* Subtasks */}
+          <div>
+            <div className="label mb-2">Checklist</div>
+            <div className="flex flex-col gap-2">
+              {subtasks.map((st) => (
+                <div key={st.id} className="flex items-center gap-2 group">
+                  <Checkbox checked={st.done} onChange={() => {
+                    const next = subtasks.map((x) => (x.id === st.id ? { ...x, done: !x.done } : x));
+                    updateTask(task.id, { subtasks: next });
+                  }} label="" size={18} />
+                  <input
+                    value={st.title}
+                    onChange={(e) => {
+                      const next = subtasks.map((x) => (x.id === st.id ? { ...x, title: e.target.value } : x));
+                      updateTask(task.id, { subtasks: next });
+                    }}
+                    placeholder="Checklist item"
+                    className={cn(
+                      "flex-1 bg-transparent text-[14px] outline-none placeholder:text-dim",
+                      st.done ? "text-dim line-through" : "text-paper"
+                    )}
+                  />
+                  <IconButton tone="danger" className="h-6 w-6 opacity-0 group-hover:opacity-100 focus:opacity-100" onClick={() => {
+                    updateTask(task.id, { subtasks: subtasks.filter((x) => x.id !== st.id) });
+                  }}>
+                    <TrashIcon className="h-3 w-3" />
+                  </IconButton>
+                </div>
+              ))}
+              <div className="flex items-center gap-2 mt-1">
+                <PlusIcon className="h-4 w-4 text-dim ml-0.5" />
+                <input
+                  placeholder="Add item..."
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                      const next = [...subtasks, { id: uid(), title: e.currentTarget.value.trim(), done: false }];
+                      updateTask(task.id, { subtasks: next });
+                      e.currentTarget.value = "";
+                    }
+                  }}
+                  className="flex-1 bg-transparent text-[14px] text-paper outline-none placeholder:text-dim"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Reminder */}
@@ -381,6 +443,16 @@ export default function TasksModule() {
   const completedToday = tasksCompletedOn(tasks, today);
   const searching = search.trim() !== "";
 
+  const tags = useMemo(() => {
+    const set = new Set<string>();
+    for (const t of tasks) {
+      if (t.done && filter !== "done") continue;
+      const matches = t.title.match(/#[\w-]+/g);
+      if (matches) matches.forEach((m) => set.add(m.toLowerCase()));
+    }
+    return Array.from(set).sort();
+  }, [tasks, filter]);
+
   return (
     <div className="flex flex-col gap-3 animate-fade-up">
       <PageIntro
@@ -427,6 +499,35 @@ export default function TasksModule() {
           </Chip>
         ))}
       </div>
+
+      {tags.length > 0 && (
+        <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1">
+          {tags.map((tag) => {
+            const active = search.toLowerCase().includes(tag);
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => {
+                  if (active) {
+                    setSearch(search.replace(new RegExp(`\\s*${tag}\\s*`, "gi"), " ").trim());
+                  } else {
+                    setSearch((search + " " + tag).trim());
+                  }
+                }}
+                className={cn(
+                  "rounded-md border px-2 py-1 text-[11px] transition-colors",
+                  active
+                    ? "border-nred bg-nred/10 text-nred"
+                    : "border-paper/[0.08] text-mute hover:bg-paper/[0.04] hover:text-paper"
+                )}
+              >
+                {tag}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <Widget className="px-4 py-1">
         {visible.length === 0 ? (
