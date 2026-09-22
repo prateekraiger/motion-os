@@ -7,6 +7,15 @@ const config: CapacitorConfig = {
   android: {
     backgroundColor: "#000000",
   },
+  plugins: {
+    StatusBar: {
+      style: "DARK",
+      backgroundColor: "#000000",
+    },
+    Keyboard: {
+      resize: "body",
+    },
+  },
 };
 
 export default config;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, memo } from "react";
 import { useStore } from "../hooks/useStore";
 import { uid } from "../hooks/useLocalStorage";
 import { useSettings } from "../hooks/useSettings";
@@ -136,8 +136,17 @@ function Composer() {
   );
 }
 
-function TaskRow({ task }: { task: Task }) {
-  const { toggleTask, removeTask, updateTask } = useStore();
+const TaskRow = memo(function TaskRow({ 
+  task,
+  onToggle,
+  onRemove,
+  onUpdate
+}: { 
+  task: Task;
+  onToggle: (id: string) => void;
+  onRemove: (id: string) => void;
+  onUpdate: (id: string, patch: Partial<Task>) => void;
+}) {
   const { settings } = useSettings();
   const overdue = isOverdue(task);
   const [expanded, setExpanded] = useState(false);
@@ -172,16 +181,16 @@ function TaskRow({ task }: { task: Task }) {
   }, [task.id]);
 
   const commitNotes = () => {
-    if (notes !== task.notes) updateTask(task.id, { notes });
+    if (notes !== task.notes) onUpdate(task.id, { notes });
   };
 
   const applyReminder = (date: string, time: string) => {
     if (!date) {
-      if (task.remindAt) updateTask(task.id, { remindAt: null });
+      if (task.remindAt) onUpdate(task.id, { remindAt: null });
       return;
     }
     const d = parseLocal(date, time);
-    updateTask(task.id, { remindAt: d ? d.toISOString() : null });
+    onUpdate(task.id, { remindAt: d ? d.toISOString() : null });
   };
 
   const reminderDate = task.remindAt ? new Date(task.remindAt) : null;
@@ -189,7 +198,7 @@ function TaskRow({ task }: { task: Task }) {
   return (
     <div className="border-b border-paper/[0.05] py-3 last:border-0">
       <div className="flex items-center gap-3">
-        <Checkbox checked={task.done} onChange={() => toggleTask(task.id)} label={task.title} />
+        <Checkbox checked={task.done} onChange={() => onToggle(task.id)} label={task.title} />
         <div className="min-w-0 flex-1">
           <button
             type="button"
@@ -207,7 +216,7 @@ function TaskRow({ task }: { task: Task }) {
               <button
                 type="button"
                 onClick={() =>
-                  updateTask(task.id, {
+                  onUpdate(task.id, {
                     priority: PRIORITY_CYCLE[(PRIORITY_CYCLE.indexOf(task.priority) + 1) % PRIORITY_CYCLE.length],
                   })
                 }
@@ -264,7 +273,7 @@ function TaskRow({ task }: { task: Task }) {
         >
           <ChevronDown className="h-4 w-4" />
         </IconButton>
-        <IconButton tone="danger" aria-label="Delete task" onClick={() => removeTask(task.id)}>
+        <IconButton tone="danger" aria-label="Delete task" onClick={() => onRemove(task.id)}>
           <TrashIcon className="h-4 w-4" />
         </IconButton>
       </div>
@@ -296,13 +305,13 @@ function TaskRow({ task }: { task: Task }) {
                 <div key={st.id} className="flex items-center gap-2 group">
                   <Checkbox checked={st.done} onChange={() => {
                     const next = subtasks.map((x) => (x.id === st.id ? { ...x, done: !x.done } : x));
-                    updateTask(task.id, { subtasks: next });
+                    onUpdate(task.id, { subtasks: next });
                   }} label="" size={18} />
                   <input
                     value={st.title}
                     onChange={(e) => {
                       const next = subtasks.map((x) => (x.id === st.id ? { ...x, title: e.target.value } : x));
-                      updateTask(task.id, { subtasks: next });
+                      onUpdate(task.id, { subtasks: next });
                     }}
                     placeholder="Checklist item"
                     className={cn(
@@ -311,7 +320,7 @@ function TaskRow({ task }: { task: Task }) {
                     )}
                   />
                   <IconButton tone="danger" className="h-6 w-6 opacity-0 group-hover:opacity-100 focus:opacity-100" onClick={() => {
-                    updateTask(task.id, { subtasks: subtasks.filter((x) => x.id !== st.id) });
+                    onUpdate(task.id, { subtasks: subtasks.filter((x) => x.id !== st.id) });
                   }}>
                     <TrashIcon className="h-3 w-3" />
                   </IconButton>
@@ -324,7 +333,7 @@ function TaskRow({ task }: { task: Task }) {
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && e.currentTarget.value.trim()) {
                       const next = [...subtasks, { id: uid(), title: e.currentTarget.value.trim(), done: false }];
-                      updateTask(task.id, { subtasks: next });
+                      onUpdate(task.id, { subtasks: next });
                       e.currentTarget.value = "";
                     }
                   }}
@@ -368,7 +377,7 @@ function TaskRow({ task }: { task: Task }) {
                 </span>
                 <button
                   type="button"
-                  onClick={() => updateTask(task.id, { remindAt: null })}
+                  onClick={() => onUpdate(task.id, { remindAt: null })}
                   className="label text-dim transition-colors hover:text-nred"
                 >
                   Clear
@@ -384,7 +393,7 @@ function TaskRow({ task }: { task: Task }) {
             <div className="label mb-2">Repeat</div>
             <div className="flex gap-2">
               {REPEAT_OPTIONS.map(([v, label]) => (
-                <Chip key={v} active={task.repeat === v} onClick={() => updateTask(task.id, { repeat: v })}>
+                <Chip key={v} active={task.repeat === v} onClick={() => onUpdate(task.id, { repeat: v })}>
                   {v !== "none" && <RepeatIcon className="h-3 w-3" />}
                   {label}
                 </Chip>
@@ -402,10 +411,10 @@ function TaskRow({ task }: { task: Task }) {
       )}
     </div>
   );
-}
+});
 
 export default function TasksModule() {
-  const { tasks, clearCompletedTasks } = useStore();
+  const { tasks, clearCompletedTasks, toggleTask, removeTask, updateTask } = useStore();
   const { settings } = useSettings();
   const [filter, setFilter] = useState<Filter>("today");
   const [search, setSearch] = useState("");
@@ -543,7 +552,7 @@ export default function TasksModule() {
             }
           />
         ) : (
-          visible.map((t) => <TaskRow key={t.id} task={t} />)
+          visible.map((t) => <TaskRow key={t.id} task={t} onToggle={toggleTask} onRemove={removeTask} onUpdate={updateTask} />)
         )}
       </Widget>
 
