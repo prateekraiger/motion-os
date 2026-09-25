@@ -1,4 +1,4 @@
-import React, { useState, Suspense, type ReactNode } from "react";
+import React, { useCallback, useEffect, useState, Suspense, type ReactNode } from "react";
 import { SettingsProvider, useSettings } from "./hooks/useSettings";
 import { StoreProvider, useStore } from "./hooks/useStore";
 import { useNow } from "./hooks/useNow";
@@ -7,6 +7,10 @@ import { MAIN_TABS, type MainTab, type View } from "./lib/nav";
 import Onboarding from "./components/Onboarding";
 import TodayModule from "./components/TodayModule";
 import ReminderToast from "./components/ReminderToast";
+import CommandPalette from "./components/CommandPalette";
+import QuickCapture from "./components/QuickCapture";
+import { useNativeBridge } from "./hooks/useNativeBridge";
+import { setHapticsEnabled } from "./lib/haptics";
 
 const TasksModule = React.lazy(() => import("./components/TasksModule"));
 const FocusModule = React.lazy(() => import("./components/FocusModule"));
@@ -14,12 +18,13 @@ const HabitsModule = React.lazy(() => import("./components/HabitsModule"));
 const MoreModule = React.lazy(() => import("./components/MoreModule"));
 const AgeModule = React.lazy(() => import("./components/AgeModule"));
 const YearModule = React.lazy(() => import("./components/YearModule"));
+const PlannerModule = React.lazy(() => import("./components/PlannerModule"));
 const StatsModule = React.lazy(() => import("./components/StatsModule"));
 const WidgetsModule = React.lazy(() => import("./components/WidgetsModule"));
 const SettingsModule = React.lazy(() => import("./components/SettingsModule"));
 const JournalModule = React.lazy(() => import("./components/JournalModule"));
 import { useReminders } from "./hooks/useReminders";
-import { ChevronLeft, FlameIcon, ListIcon, SunIcon, TargetIcon } from "./components/icons";
+import { ChevronLeft, FlameIcon, ListIcon, SearchIcon, SunIcon, TargetIcon } from "./components/icons";
 import { cn } from "./utils/cn";
 
 const TAB_META: Record<MainTab, { label: string; icon: (active: boolean) => ReactNode }> = {
@@ -40,6 +45,7 @@ const TAB_META: Record<MainTab, { label: string; icon: (active: boolean) => Reac
 };
 
 const SUB_TITLES: Partial<Record<View, string>> = {
+  planner: "Day planner",
   life: "Life clock",
   year: "Year clock",
   stats: "Stats & history",
@@ -61,7 +67,15 @@ function FocusIndicator() {
   );
 }
 
-function Header({ view, onBack }: { view: View; onBack: () => void }) {
+function Header({
+  view,
+  onBack,
+  onOpenPalette,
+}: {
+  view: View;
+  onBack: () => void;
+  onOpenPalette?: () => void;
+}) {
   const { settings } = useSettings();
   const now = useNow(1);
   const isSub = view in SUB_TITLES;
@@ -89,6 +103,16 @@ function Header({ view, onBack }: { view: View; onBack: () => void }) {
         <div className="flex items-center gap-3">
           {isSub && <span className="text-[9px] font-medium uppercase tracking-[0.18em] text-dim">{SUB_TITLES[view]}</span>}
           <FocusIndicator />
+          {onOpenPalette && (
+            <button
+              type="button"
+              onClick={onOpenPalette}
+              aria-label="Open command palette"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-paper/[0.1] text-mute transition-colors hover:border-paper/25 hover:text-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/70"
+            >
+              <SearchIcon className="h-4 w-4" />
+            </button>
+          )}
           <time className="font-dot tnum text-[15px] text-mute" dateTime={new Date(now).toISOString()}>
             {fmtTime(new Date(now), settings.h24)}
           </time>
@@ -105,14 +129,41 @@ function isMainTab(v: View): v is MainTab {
 function Shell() {
   const { settings } = useSettings();
   const [view, setView] = useState<View>("today");
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [capture, setCapture] = useState<{ open: boolean; text: string }>({ open: false, text: "" });
   const reminder = useReminders();
+
+  // Share intents ("share to Motion OS") and the Quick Settings tile.
+  useNativeBridge({
+    onShare: (text) => setCapture({ open: true, text }),
+  });
+
+  // Keep the haptic layer in sync with the preference.
+  useEffect(() => {
+    setHapticsEnabled(settings.haptics);
+  }, [settings.haptics]);
+
+  // Cmd/Ctrl + K opens the command palette (web / PWA keyboard flow).
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setPaletteOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   if (!settings.onboarded) return <Onboarding />;
 
-  const navigate = (next: View) => {
+  const navigate = useCallback((next: View) => {
     setView(next);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, []);
+
+  const openCapture = useCallback((text = "") => setCapture({ open: true, text }), []);
+  const closeCapture = useCallback(() => setCapture({ open: false, text: "" }), []);
 
   const activeTab: MainTab = isMainTab(view) ? view : "more";
 
@@ -128,17 +179,18 @@ function Shell() {
           onDismiss={reminder.dismiss}
         />
       )}
-      <Header view={view} onBack={() => navigate("more")} />
+      <Header view={view} onBack={() => navigate("more")} onOpenPalette={() => setPaletteOpen(true)} />
 
       <main id="main-content" className="flex-1 px-3 pb-32 pt-1">
         <Suspense fallback={<div className="flex h-32 items-center justify-center text-[13px] text-dim font-dot">Loading module...</div>}>
-          {view === "today" && <TodayModule onNavigate={navigate} />}
+          {view === "today" && <TodayModule onNavigate={navigate} onQuickCapture={() => openCapture()} />}
           {view === "tasks" && <TasksModule />}
           {view === "focus" && <FocusModule />}
           {view === "habits" && <HabitsModule />}
           {view === "more" && <MoreModule onNavigate={navigate} />}
           {view === "life" && <AgeModule />}
           {view === "year" && <YearModule />}
+          {view === "planner" && <PlannerModule />}
           {view === "stats" && <StatsModule />}
           {view === "widgets" && <WidgetsModule />}
           {view === "settings" && <SettingsModule onResetDone={() => navigate("today")} />}
@@ -170,6 +222,9 @@ function Shell() {
           })}
         </div>
       </nav>
+
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onNavigate={navigate} />
+      <QuickCapture open={capture.open} initialText={capture.text} onClose={closeCapture} />
     </div>
   );
 }

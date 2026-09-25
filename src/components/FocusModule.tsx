@@ -4,7 +4,7 @@ import { useStore } from "../hooks/useStore";
 import { useAmbientSound } from "../hooks/useAmbientSound";
 import { focusMsOn, phaseDurationMs, sessionsOn } from "../lib/productivity";
 import { clamp, dateKey, fmtClock, fmtDuration } from "../lib/time";
-import type { FocusPhase } from "../lib/types";
+import { SUGGESTED_TAGS, type FocusPhase } from "../lib/types";
 import {
   Chip,
   DotRing,
@@ -27,8 +27,21 @@ const PHASE_META: Record<FocusPhase, { label: string; hint: string }> = {
 };
 
 export default function FocusModule() {
-  const { timer, focusConfig, sessions, tasks, startTimer, pauseTimer, resetTimer, skipPhase, setTimerTask, setFocusPhase, updateFocusConfig } =
-    useStore();
+  const {
+    timer,
+    focusConfig,
+    sessions,
+    tasks,
+    startTimer,
+    pauseTimer,
+    resetTimer,
+    skipPhase,
+    setTimerTask,
+    setTimerTag,
+    setFocusPhase,
+    startFocusBlock,
+    updateFocusConfig,
+  } = useStore();
   
   // Start ambient sound engine
   useAmbientSound();
@@ -159,6 +172,55 @@ export default function FocusModule() {
         </Widget>
       )}
 
+      {/* FOCUS TAG */}
+      {isWork && (
+        <Widget>
+          <div className="flex items-center justify-between">
+            <Label>Tag this block</Label>
+            {timer.tag && (
+              <button type="button" onClick={() => setTimerTag(null)} className="label text-mute hover:text-paper">
+                Clear
+              </button>
+            )}
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-dim">
+            Tags power the Stats heatmap, so a year of <span className="text-mute">#DeepWork</span> versus{" "}
+            <span className="text-mute">#Admin</span> is visible at a glance.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {SUGGESTED_TAGS.map((tag) => (
+              <Chip
+                key={tag}
+                active={timer.tag === tag}
+                onClick={() => setTimerTag(timer.tag === tag ? null : tag)}
+              >
+                #{tag}
+              </Chip>
+            ))}
+          </div>
+          <input
+            value={timer.tag ?? ""}
+            onChange={(event) => setTimerTag(event.target.value)}
+            placeholder="Or type your own tag"
+            maxLength={24}
+            className="mt-3 w-full rounded-2xl border border-paper/[0.08] bg-ink px-4 py-2.5 text-[13px] text-paper outline-none focus:border-paper/60 placeholder:text-dim"
+          />
+        </Widget>
+      )}
+
+      {/* QUICK BLOCKS */}
+      <Widget>
+        <Label>Quick blocks</Label>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {[15, 25, 50, 90].map((minutes) => (
+            <Chip key={minutes} onClick={() => startFocusBlock(minutes)}>
+              {minutes} min
+            </Chip>
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] text-dim">Same action as the Android Quick Settings tile.</p>
+      </Widget>
+
       {/* AMBIENT SOUND */}
       <Widget>
         <Label>Ambient Sound</Label>
@@ -216,6 +278,7 @@ export default function FocusModule() {
                     <div className="flex items-center gap-3">
                       <span className={cn("h-1.5 w-1.5 rounded-full", s.completed ? "bg-nred" : "bg-dim")} />
                       <span className="text-[13px] text-mute">{task ? task.title : "Focus block"}</span>
+                      {s.tag && <span className="font-dot text-[11px] text-dim">#{s.tag}</span>}
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="font-dot tnum text-[13px] text-paper">{fmtDuration(s.durationMs)}</span>

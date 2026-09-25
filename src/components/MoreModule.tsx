@@ -108,6 +108,16 @@ export default function MoreModule({ onNavigate }: { onNavigate: (v: View) => vo
           onClick={() => onNavigate("journal")}
         />
         <NavRow
+          icon={
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h10" />
+            </svg>
+          }
+          title="Day planner"
+          sub="Timebox tasks on a timeline"
+          onClick={() => onNavigate("planner")}
+        />
+        <NavRow
           icon={<ClockIcon className="h-5 w-5" />}
           title="Home & lock-screen widgets"
           sub="Five native formats in the app's dot voice"

@@ -12,6 +12,7 @@ import {
   MS,
 } from "../lib/time";
 import { Widget, Label, Num, DotBar, DotGrid, DotRing, StatRow, GlyphDots, PageIntro, StatusPill, EmptyState } from "./ui";
+import WeeksGrid, { computeWeeksGrid } from "./WeeksGrid";
 import { SunIcon } from "./icons";
 import { cn } from "../utils/cn";
 
@@ -66,6 +67,7 @@ export default function AgeModule() {
 
   const lifeExp = settings.lifeExpectancy;
   const lifeFraction = Math.min(1, age.decimalYears / lifeExp);
+  const weeksGrid = useMemo(() => computeWeeksGrid(birth, nowDate, lifeExp), [birth, nowDate, lifeExp]);
 
   const birthdayIsToday = nb.isToday;
   const msClass = settings.motionBlur ? "ms-motion" : "ms-still";
@@ -180,6 +182,22 @@ export default function AgeModule() {
           </DotRing>
         </Widget>
       </div>
+
+      {/* 4,000 WEEKS */}
+      <Widget>
+        <div className="flex items-center justify-between">
+          <Label red>4,000 weeks</Label>
+          <span className="label">
+            <span className="text-paper">{weeksGrid.weeksLived.toLocaleString("en-US")}</span> /{" "}
+            {weeksGrid.totalWeeks.toLocaleString("en-US")}
+          </span>
+        </div>
+        <WeeksGrid birth={birth} now={nowDate} lifeExpectancy={lifeExp} className="mt-4" />
+        <div className="mt-3 flex items-center justify-between border-t border-paper/[0.06] pt-3">
+          <span className="label">Weeks remaining</span>
+          <Num value={weeksGrid.weeksRemaining.toLocaleString("en-US")} className="text-[20px] text-paper" />
+        </div>
+      </Widget>
 
       {/* LIFE GRID */}
       <Widget>

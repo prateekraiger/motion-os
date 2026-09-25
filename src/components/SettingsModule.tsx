@@ -1,10 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { useSettings, type AppTheme, type YearView } from "../hooks/useSettings";
 import { useStore } from "../hooks/useStore";
+import { useBackups } from "../hooks/useBackups";
 import { webNotificationState, webNotificationsSupported, type NotifState } from "../hooks/useReminders";
 import { parseLocal, toDateInput, toTimeInput } from "../lib/time";
 import type { FocusConfig } from "../lib/types";
-import { Widget, Label, Toggle, Segmented, PageIntro, StatusPill, IconButton } from "./ui";
+import {
+  calendarPermission,
+  requestCalendarPermission,
+  type CalendarPermission,
+} from "../lib/calendar";
+import {
+  notificationPermission,
+  requestNotificationPermission,
+  type NotificationPermission,
+} from "../lib/notifications";
+import { hapticsSupported } from "../lib/haptics";
+import { MAX_SNAPSHOTS } from "../lib/backups";
+import { Widget, Label, Toggle, Segmented, PageIntro, StatusPill, IconButton, ActionButton } from "./ui";
+import SyncPanel from "./SyncPanel";
+import { BackupIcon, TrashIcon } from "./icons";
 import { cn } from "../utils/cn";
 
 function Row({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
@@ -77,7 +92,17 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
   const [importMsg, setImportMsg] = useState<string | null>(null);
+  const [calendarState, setCalendarState] = useState<CalendarPermission>("prompt");
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>("prompt");
+  const [backupMsg, setBackupMsg] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const backups = useBackups();
+
+  // Both permission helpers are async: resolve them after the first paint.
+  useEffect(() => {
+    void calendarPermission().then(setCalendarState);
+    void notificationPermission().then(setNotifPermission);
+  }, []);
 
   useEffect(() => {
     if (!saved) return;
@@ -382,6 +407,129 @@ export default function SettingsModule({ onResetDone }: { onResetDone?: () => vo
             {exportMsg || importMsg}
           </p>
         )}
+      </Widget>
+
+      {/* SYNC & BACKUPS */}
+      <Widget>
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/[0.08] bg-ink text-mute">
+            <BackupIcon className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <Label>Rolling backups</Label>
+            <div className="mt-1 text-[11px] leading-relaxed text-dim">
+              A snapshot is taken automatically once a day and the last {MAX_SNAPSHOTS} are kept on this device.
+              Nothing is uploaded anywhere.
+            </div>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <ActionButton secondary onClick={() => void backups.saveNow().then((created) => {
+            setBackupMsg(created ? "Snapshot saved." : "Nothing changed since the last snapshot.");
+            window.setTimeout(() => setBackupMsg(""), 2500);
+          })}>
+            Save snapshot now
+          </ActionButton>
+        </div>
+        <div className="mt-3">
+          {backups.snapshots.length === 0 ? (
+            <p className="text-[12px] text-dim">No snapshots yet — the first one is taken when you open the app.</p>
+          ) : (
+            backups.snapshots.map((snapshot) => (
+              <div
+                key={snapshot.id}
+                className="flex items-center justify-between gap-3 border-b border-paper/[0.05] py-2.5 last:border-0"
+              >
+                <div className="min-w-0">
+                  <div className="text-[13px] text-paper">{snapshot.label}</div>
+                  <div className="label">{new Date(snapshot.at).toLocaleString()}</div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void backups.restore(snapshot.id).then((ok) => {
+                      setBackupMsg(ok ? "Snapshot restored." : "Could not read that snapshot.");
+                      window.setTimeout(() => setBackupMsg(""), 2500);
+                    })}
+                    className="rounded-full border border-paper/[0.12] px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-paper hover:bg-paper/[0.06]"
+                  >
+                    Restore
+                  </button>
+                  <IconButton
+                    tone="danger"
+                    aria-label="Delete snapshot"
+                    onClick={() => backups.remove(snapshot.id)}
+                    className="h-8 w-8"
+                  >
+                    <TrashIcon className="h-3.5 w-3.5" />
+                  </IconButton>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        {backupMsg && (
+          <p className="mt-3 text-[11px] text-mute" role="status">
+            {backupMsg}
+          </p>
+        )}
+      </Widget>
+
+      <SyncPanel />
+
+      {/* CALENDAR, NOTIFICATIONS & HAPTICS */}
+      <Widget>
+        <Label>Calendar, alerts & feel</Label>
+        <div className="mt-1">
+          <Row
+            title="Calendar overlay"
+            sub="Show system events on Today and the planner (read-only, never stored)"
+          >
+            {calendarState === "granted" ? (
+              <Toggle
+                checked={settings.calendarOverlay}
+                onChange={(v) => update({ calendarOverlay: v })}
+                label="Calendar overlay"
+              />
+            ) : calendarState === "unsupported" ? (
+              <span className="text-[11px] text-dim">Android app only</span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void requestCalendarPermission().then(setCalendarState)}
+                className="rounded-full border border-paper/[0.12] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-paper hover:bg-paper/[0.06]"
+              >
+                Allow
+              </button>
+            )}
+          </Row>
+          <Row title="Native notifications" sub="Focus blocks and reminders with action buttons">
+            {notifPermission === "granted" ? (
+              <Toggle
+                checked={settings.focusNotifications}
+                onChange={(v) => update({ focusNotifications: v })}
+                label="Native notifications"
+              />
+            ) : notifPermission === "unsupported" ? (
+              <span className="text-[11px] text-dim">Android app only</span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void requestNotificationPermission().then(setNotifPermission)}
+                className="rounded-full border border-paper/[0.12] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-paper hover:bg-paper/[0.06]"
+              >
+                Allow
+              </button>
+            )}
+          </Row>
+          <Row title="Haptic feedback" sub="A short buzz when you complete a task, tap a habit or finish a block">
+            {hapticsSupported() ? (
+              <Toggle checked={settings.haptics} onChange={(v) => update({ haptics: v })} label="Haptic feedback" />
+            ) : (
+              <span className="text-[11px] text-dim">No motor here</span>
+            )}
+          </Row>
+        </div>
       </Widget>
 
       {/* DANGER ZONE */}
