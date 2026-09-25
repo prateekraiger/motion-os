@@ -4,6 +4,7 @@ export type View =
   | "focus"
   | "habits"
   | "more"
+  | "planner"
   | "life"
   | "year"
   | "stats"

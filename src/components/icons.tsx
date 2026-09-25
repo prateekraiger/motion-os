@@ -176,3 +176,33 @@ export const SunIcon = (p: IconProps) => (
     <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
   </Base>
 );
+
+export const MicIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="9" y="3" width="6" height="11" rx="3" />
+    <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M8.5 21h7" />
+  </Base>
+);
+
+export const CloudIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M7 18.5h9.5a3.5 3.5 0 0 0 .4-6.98A5.5 5.5 0 0 0 6.6 10.2 4.4 4.4 0 0 0 7 18.5Z" />
+    <path d="M12 15.5v-4M10 13.5l2-2 2 2" />
+  </Base>
+);
+
+export const GridIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+    <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+    <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+    <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
+  </Base>
+);
+
+export const BackupIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-9Z" />
+    <path d="M12 15.5v-6M9.5 12.5L12 10l2.5 2.5" />
+  </Base>
+);

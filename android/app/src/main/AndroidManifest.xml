@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Tactile feedback on completions and taps. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- On-device dictation for quick capture. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Read-only calendar overlay on Today and the planner. -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <!-- Interactive focus / reminder notifications (Android 13+). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Reminders must be able to wake the device to fire on time. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:allowBackup="true"
@@ -20,7 +30,42 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!--
+              "Share to Motion OS": text shared from any app lands in quick
+              capture as a task. singleTask + onNewIntent keeps a second share
+              from stacking activities.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
+            <!-- Quick Settings tile: start a 25-minute focus block. -->
+            <intent-filter>
+                <action android:name="io.motionos.app.ACTION_START_FOCUS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
+
+        <!-- Quick Settings tile (notification shade). -->
+        <service
+            android:name=".FocusTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_stat_motion"
+            android:label="@string/focus_tile_name"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <!-- Focus / reminder notification actions. -->
+        <receiver
+            android:name=".NotificationActionReceiver"
+            android:exported="false" />
 
         <!-- Native home-screen widgets. Exported is required so the launcher can discover them. -->
         <!--

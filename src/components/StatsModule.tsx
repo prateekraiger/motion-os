@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNow } from "../hooks/useNow";
 import { useStore } from "../hooks/useStore";
 import {
@@ -6,10 +6,13 @@ import {
   focusWeeks,
   habitWindowCompletion,
   habitStreak,
+  tagTotals,
+  usedTags,
   type DayStat,
 } from "../lib/productivity";
 import { dateKey, fmtDuration } from "../lib/time";
-import { DotBar, Label, PageIntro, StatTile, StatusPill, Widget } from "./ui";
+import { Chip, DotBar, Label, PageIntro, StatTile, StatusPill, Widget } from "./ui";
+import Heatmap from "./Heatmap";
 import { FlameIcon } from "./icons";
 import { cn } from "../utils/cn";
 
@@ -57,6 +60,7 @@ export default function StatsModule() {
   const { tasks, habits, sessions } = useStore();
   const now = useNow(1);
   const today = dateKey(new Date(now));
+  const [tag, setTag] = useState<string | null>(null);
 
   // Recompute once per calendar day, not once per second.
   const days = useMemo(() => dailyStats(sessions, tasks, 7, new Date(now)), [sessions, tasks, today]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -73,6 +77,14 @@ export default function StatsModule() {
   const hasFocus = days.some((d) => d.ms > 0);
   const hasCompletions = days.some((d) => d.done > 0);
   const weekDelta = weeks.lastWeek > 0 ? Math.round(((weeks.thisWeek - weeks.lastWeek) / weeks.lastWeek) * 100) : null;
+
+  const tags = useMemo(() => usedTags(sessions), [sessions]);
+  const tagBreakdown = useMemo(() => tagTotals(sessions), [sessions]);
+  const tagMax = tagBreakdown[0]?.ms ?? 1;
+  const taggedSessions = useMemo(
+    () => sessions.filter((s) => !tag || (s.tag ?? "").toLowerCase() === tag.toLowerCase()).length,
+    [sessions, tag],
+  );
 
   return (
     <div className="flex flex-col gap-3 animate-fade-up">
@@ -105,6 +117,57 @@ export default function StatsModule() {
           />
         </div>
       </Widget>
+
+      {/* HEATMAP */}
+      <Widget>
+        <div className="flex items-center justify-between">
+          <Label red>Focus heatmap</Label>
+          <span className="label">{tag ? `#${tag}` : "all tags"}</span>
+        </div>
+        {tags.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Chip active={tag === null} onClick={() => setTag(null)}>
+              All
+            </Chip>
+            {tags.map((t) => (
+              <Chip key={t} active={tag === t} onClick={() => setTag(tag === t ? null : t)}>
+                #{t}
+              </Chip>
+            ))}
+          </div>
+        )}
+        <Heatmap sessions={sessions} tag={tag} className="mt-4" />
+        {taggedSessions === 0 && (
+          <p className="mt-3 text-[11px] leading-relaxed text-dim">
+            Tag a focus block in the Focus module (for example <span className="text-mute">#DeepWork</span>) and it shows
+            up here.
+          </p>
+        )}
+      </Widget>
+
+      {/* TAG BREAKDOWN */}
+      {tagBreakdown.length > 0 && (
+        <Widget>
+          <Label>Where the time went</Label>
+          <div className="mt-2">
+            {tagBreakdown.map((entry) => (
+              <div
+                key={entry.tag}
+                className="flex items-center gap-3 border-b border-paper/[0.05] py-2.5 last:border-0"
+              >
+                <span className="w-24 shrink-0 truncate font-dot text-[13px] text-paper">#{entry.tag}</span>
+                <span className="min-w-0 flex-1">
+                  <DotBar fraction={entry.ms / tagMax} count={20} size="sm" activeRed={false} />
+                </span>
+                <span className="font-dot tnum w-16 shrink-0 text-right text-[12px] text-mute">
+                  {fmtDuration(entry.ms)}
+                </span>
+                <span className="label w-10 shrink-0 text-right">{entry.sessions}×</span>
+              </div>
+            ))}
+          </div>
+        </Widget>
+      )}
 
       {/* TASKS */}
       <Widget>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, memo } from "react";
+import { useEffect, useMemo, useRef, useState, memo } from "react";
 import { useStore } from "../hooks/useStore";
 import { uid } from "../hooks/useLocalStorage";
 import { useSettings } from "../hooks/useSettings";
@@ -22,12 +22,16 @@ import {
   ChevronDown,
   ClockIcon,
   ListIcon,
+  MicIcon,
   NoteIcon,
   PlusIcon,
   RepeatIcon,
   SearchIcon,
   TrashIcon,
 } from "./icons";
+import { startDictation, voiceSupported } from "../lib/speech";
+import { cancelReminderNotification, scheduleReminderNotification } from "../lib/notifications";
+import { reminderNotificationId } from "../lib/reminders";
 import { cn } from "../utils/cn";
 
 type Filter = "today" | "upcoming" | "all" | "done";
@@ -50,6 +54,10 @@ function Composer() {
   const [due, setDue] = useState<string | null>(null);
   const [repeat, setRepeat] = useState<Repeat>("none");
   const [open, setOpen] = useState(false);
+  const [listening, setListening] = useState(false);
+  const dictationRef = useRef<{ stop: () => void } | null>(null);
+
+  useEffect(() => () => dictationRef.current?.stop(), []);
 
   const submit = () => {
     if (!title.trim()) return;
@@ -59,6 +67,25 @@ function Composer() {
     setPriority("med");
     setRepeat("none");
     setOpen(false);
+  };
+
+  const dictate = async () => {
+    if (listening) {
+      dictationRef.current?.stop();
+      dictationRef.current = null;
+      setListening(false);
+      return;
+    }
+    setOpen(true);
+    const handle = await startDictation((event, value) => {
+      if (event === "partial") setTitle((prev) => `${prev.replace(/\s*$/, "")}${prev ? " " : ""}${value}`.trim());
+      if (event === "final" || event === "error") {
+        setListening(false);
+        dictationRef.current = null;
+      }
+    });
+    dictationRef.current = handle;
+    setListening(true);
   };
 
   const today = dateKey();
@@ -85,8 +112,22 @@ function Composer() {
           maxLength={120}
           className="min-w-0 flex-1 bg-transparent py-2 text-[15px] text-paper outline-none placeholder:text-dim"
         />
-        <IconButton tone="solid" onClick={submit} disabled={!title.trim()} aria-label="Add task">
+        <IconButton
+          tone="solid"
+          onClick={submit}
+          disabled={!title.trim()}
+          aria-label="Add task"
+          className="mr-1"
+        >
           <PlusIcon className="h-4 w-4" />
+        </IconButton>
+        <IconButton
+          onClick={() => void dictate()}
+          disabled={!voiceSupported()}
+          aria-label={listening ? "Stop dictation" : "Dictate a task"}
+          className={cn(listening && "text-nred")}
+        >
+          <MicIcon className={cn("h-4.5 w-4.5", listening && "animate-dot-pulse")} />
         </IconButton>
       </div>
 
@@ -185,12 +226,24 @@ const TaskRow = memo(function TaskRow({
   };
 
   const applyReminder = (date: string, time: string) => {
+    const previousId = task.remindAt ? reminderNotificationId(task.id, task.remindAt) : null;
     if (!date) {
-      if (task.remindAt) onUpdate(task.id, { remindAt: null });
+      if (task.remindAt) {
+        onUpdate(task.id, { remindAt: null });
+        if (previousId) void cancelReminderNotification(previousId);
+      }
       return;
     }
     const d = parseLocal(date, time);
-    onUpdate(task.id, { remindAt: d ? d.toISOString() : null });
+    const iso = d ? d.toISOString() : null;
+    onUpdate(task.id, { remindAt: iso });
+    if (d && iso) {
+      const nextId = reminderNotificationId(task.id, iso);
+      // Moving a reminder re-arms it: drop the alarm we no longer want.
+      if (previousId && previousId !== nextId) void cancelReminderNotification(previousId);
+      // Native alarms survive the app being closed, unlike the in-WebView check.
+      void scheduleReminderNotification({ id: nextId, title: "Reminder", body: task.title, at: d.getTime() });
+    }
   };
 
   const reminderDate = task.remindAt ? new Date(task.remindAt) : null;

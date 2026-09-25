@@ -2,7 +2,9 @@ import { useMemo } from "react";
 import { useNow } from "../hooks/useNow";
 import { useSettings } from "../hooks/useSettings";
 import { useStore } from "../hooks/useStore";
+import { useCalendarEvents } from "../hooks/useCalendarEvents";
 import { focusMsOn, habitDoneToday, isOverdue, nextReminder, sortTasks, tasksCompletedOn } from "../lib/productivity";
+import { fmtMinute, planFor } from "../lib/timebox";
 import {
   computeAge,
   dateKey,
@@ -15,8 +17,8 @@ import {
   yearProgress,
 } from "../lib/time";
 import type { View } from "../lib/nav";
-import { Checkbox, DotBar, IconButton, Label, Num, PriorityDot, StatTile, Widget } from "./ui";
-import { BoltIcon, ChevronRight, ClockIcon, FlameIcon, PauseIcon, PlayIcon } from "./icons";
+import { ActionButton, Checkbox, DotBar, IconButton, Label, Num, PriorityDot, StatTile, Widget } from "./ui";
+import { BoltIcon, CalendarIcon, ChevronRight, ClockIcon, FlameIcon, GridIcon, MicIcon, PauseIcon, PlayIcon } from "./icons";
 import { cn } from "../utils/cn";
 
 function CardLink({ children, onClick, className }: { children: React.ReactNode; onClick: () => void; className?: string }) {
@@ -27,12 +29,20 @@ function CardLink({ children, onClick, className }: { children: React.ReactNode;
   );
 }
 
-export default function TodayModule({ onNavigate }: { onNavigate: (v: View) => void }) {
+export default function TodayModule({
+  onNavigate,
+  onQuickCapture,
+}: {
+  onNavigate: (v: View) => void;
+  onQuickCapture?: () => void;
+}) {
   const { settings, birthDate } = useSettings();
-  const { tasks, habits, sessions, timer, startTimer, pauseTimer, toggleTask, toggleHabit } = useStore();
+  const { tasks, habits, sessions, timer, plans, startTimer, pauseTimer, toggleTask, toggleHabit } = useStore();
   const now = useNow(timer.status === "running" ? 4 : 1);
   const nowDate = useMemo(() => new Date(now), [now]);
   const today = dateKey(nowDate);
+  const calendar = useCalendarEvents(today, settings.calendarOverlay);
+  const dayPlan = useMemo(() => planFor(today, plans), [plans, today]);
 
   const dp = dayProgress(nowDate);
   const yp = yearProgress(nowDate);
@@ -73,6 +83,16 @@ export default function TodayModule({ onNavigate }: { onNavigate: (v: View) => v
           {settings.name ? `,` : "."}
           {settings.name && <span className="text-mute"> {settings.name}.</span>}
         </h1>
+        {onQuickCapture && (
+          <button
+            type="button"
+            onClick={onQuickCapture}
+            aria-label="Quick capture with your voice"
+            className="mt-3 inline-flex items-center gap-2 rounded-full border border-paper/[0.1] px-3.5 py-2 text-[11px] font-medium uppercase tracking-[0.14em] text-mute transition-colors hover:border-paper/25 hover:text-paper"
+          >
+            <MicIcon className="h-4 w-4" /> Capture
+          </button>
+        )}
         <p className="mt-2 text-[13px] text-mute">
           {openCount === 0
             ? "No open tasks. Enjoy the clear runway."
@@ -114,6 +134,80 @@ export default function TodayModule({ onNavigate }: { onNavigate: (v: View) => v
             {dayLeftHours}h {dayLeftMin}m left
           </span>
         </div>
+      </Widget>
+
+      {/* CALENDAR OVERLAY (read-only) */}
+      {settings.calendarOverlay && calendar.permission === "granted" && calendar.events.length > 0 && (
+        <Widget>
+          <div className="flex items-center justify-between">
+            <Label>
+              <CalendarIcon className="h-3.5 w-3.5" /> Calendar
+            </Label>
+            <span className="label">read-only</span>
+          </div>
+          <div className="mt-3">
+            {calendar.events.slice(0, 4).map((event) => {
+              const start = new Date(event.startMs);
+              const end = new Date(event.endMs);
+              return (
+                <div
+                  key={event.id}
+                  className="flex items-center gap-3 border-b border-paper/[0.05] py-2.5 last:border-0"
+                >
+                  <span
+                    className="h-6 w-1 shrink-0 rounded-full"
+                    style={{ background: event.color ?? "var(--color-line)" }}
+                  />
+                  <span className="min-w-0 flex-1 truncate text-[13px] text-paper">{event.title}</span>
+                  <span className="font-dot tnum shrink-0 text-[11px] text-mute">
+                    {event.allDay ? "All day" : `${fmtTime(start, settings.h24)}–${fmtTime(end, settings.h24)}`}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </Widget>
+      )}
+
+      {/* DAY PLAN */}
+      <Widget>
+        <div className="flex items-center justify-between">
+          <Label>
+            <GridIcon className="h-3.5 w-3.5" /> Day plan
+          </Label>
+          <button
+            type="button"
+            onClick={() => onNavigate("planner")}
+            className="label flex items-center gap-1 text-mute hover:text-paper"
+          >
+            Planner <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+        {dayPlan.blocks.length === 0 ? (
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <p className="text-[12px] text-dim">Nothing timeboxed yet. Drag tasks onto a timeline to plan the day.</p>
+            <ActionButton secondary onClick={() => onNavigate("planner")}>
+              Plan
+            </ActionButton>
+          </div>
+        ) : (
+          <div className="mt-3">
+            {[...dayPlan.blocks]
+              .sort((a, b) => a.startMin - b.startMin)
+              .slice(0, 3)
+              .map((block) => (
+                <div key={block.id} className="flex items-center gap-3 border-b border-paper/[0.05] py-2.5 last:border-0">
+                  <span className="font-dot tnum w-12 shrink-0 text-[11px] text-dim">
+                    {fmtMinute(block.startMin, settings.h24)}
+                  </span>
+                  <span className={block.done ? "min-w-0 flex-1 truncate text-[13px] text-mute line-through" : "min-w-0 flex-1 truncate text-[13px] text-paper"}>
+                    {block.title}
+                  </span>
+                  <span className="label shrink-0">{block.durationMin}m</span>
+                </div>
+              ))}
+          </div>
+        )}
       </Widget>
 
       {/* QUICK STATS */}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "./useStore";
 import { dueReminders, reminderKey } from "../lib/productivity";
+import { notificationsSupported } from "../lib/notifications";
 import type { Task } from "../lib/types";
 
 const FIRED_KEY = "motion-os:reminders:fired:v1";
@@ -29,6 +30,9 @@ export function webNotificationState(): NotifState {
 }
 
 function pushWebNotification(task: Task, tag: string) {
+  // On Android the native reminder notification (with action buttons) already
+  // covers this, so pushing a browser notification too would double-alert.
+  if (notificationsSupported()) return;
   try {
     if (webNotificationState() !== "granted") return;
     const n = new Notification("Motion OS", { body: task.title, tag, silent: false });

@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { syncNativeWidgetSettings } from "../lib/nativeWidgets";
+import type { SyncConfig, SyncProvider } from "../lib/types";
 
 export type YearView = "dots" | "bar";
 export type WidgetTheme = "system" | "light" | "dark";
@@ -29,7 +30,27 @@ export interface Settings {
   theme: AppTheme;
   /** Whether the first-run flow has been completed. */
   onboarded: boolean;
+  /** Tactile feedback on taps, completions and timer events. */
+  haptics: boolean;
+  /** Show system calendar events on the Today dashboard (read-only). */
+  calendarOverlay: boolean;
+  /** Native notifications for focus blocks and task reminders. */
+  focusNotifications: boolean;
+  /** Bring-your-own-cloud sync configuration. */
+  sync: SyncConfig;
 }
+
+export const DEFAULT_SYNC: SyncConfig = {
+  provider: "webdav",
+  url: "",
+  username: "",
+  password: "",
+  path: "motion-os-sync.motion",
+  encrypt: true,
+  passphrase: "",
+  lastSyncAt: null,
+  autoSync: false,
+};
 
 const KEY = "motion-os:settings:v1";
 
@@ -44,6 +65,10 @@ const DEFAULTS: Settings = {
   widgetTheme: "system",
   theme: "system",
   onboarded: false,
+  haptics: true,
+  calendarOverlay: false,
+  focusNotifications: true,
+  sync: DEFAULT_SYNC,
 };
 
 function load(): Settings {
@@ -55,6 +80,16 @@ function load(): Settings {
     // Existing users who already set a birth moment are considered onboarded.
     if (parsed.onboarded == null && parsed.birth) merged.onboarded = true;
     if (merged.theme !== "dark" && merged.theme !== "light") merged.theme = "system";
+    // Sync settings hold credentials: keep the shape strict so a partial
+    // write (or an older backup) can never produce a broken config.
+    const rawSync = (parsed.sync ?? {}) as Partial<SyncConfig>;
+    const provider: SyncProvider = rawSync.provider === "file" ? "file" : "webdav";
+    merged.sync = {
+      ...DEFAULT_SYNC,
+      ...rawSync,
+      provider,
+      lastSyncAt: typeof rawSync.lastSyncAt === "number" ? rawSync.lastSyncAt : null,
+    };
     return merged;
   } catch {
     return DEFAULTS;
