@@ -8,7 +8,7 @@
     <string name="age_widget_description">A live view of the time you have lived.</string>
     <string name="year_widget_name">Year in motion</string>
     <string name="year_widget_description">A live view of this year in progress.</string>
-</resources>
     <string name="focus_tile_name">Focus 25m</string>
     <string name="focus_channel_name">Focus block</string>
     <string name="reminder_channel_name">Task reminders</string>
+</resources>
