@@ -12,3 +12,7 @@
    cd android
    .\gradlew.bat assembleDebug
    ```
+
+aab
+
+cd android; .\gradlew bundleRelease
