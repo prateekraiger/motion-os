@@ -84,7 +84,11 @@ public class MotionCalendarPlugin extends Plugin {
         List<JSObject> events = queryEvents(bounds[0], bounds[1]);
 
         JSObject result = new JSObject();
-        result.put("events", new JSArray(events.toArray(new JSObject[0])));
+        JSArray eventsArray = new JSArray();
+        for (JSObject event : events) {
+            eventsArray.put(event);
+        }
+        result.put("events", eventsArray);
         call.resolve(result);
     }
 

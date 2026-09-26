@@ -4,4 +4,16 @@
     <color name="nred">#FFFF0000</color>
     <color name="ink">#FF000000</color>
     <color name="paper">#FFFFFFFF</color>
+    <color name="widget_text">#FF000000</color>
+    <color name="widget_muted">#FF888888</color>
+    <color name="widget_background">#FF000000</color>
+    <color name="widget_stroke">#FF333333</color>
+    <color name="widget_background_light">#FFFFFFFF</color>
+    <color name="widget_stroke_light">#FFDDDDDD</color>
+    <color name="widget_red">#FFFF0000</color>
+    <color name="widget_red_light">#FFFF0000</color>
+    <color name="widget_line">#FF333333</color>
+    <color name="widget_line_light">#FFDDDDDD</color>
+    <color name="widget_text_light">#FF000000</color>
+    <color name="widget_muted_light">#FF888888</color>
 </resources>

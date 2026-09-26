@@ -68,7 +68,7 @@ public final class MotionBus {
         }
         for (Plugin target : new ArrayList<>(INTENT_TARGETS)) {
             try {
-                target.notifyListeners("motionIntent", intent);
+                notifyPlugin(target, "motionIntent", intent);
             } catch (Exception ignored) {
                 // Listener went away mid-dispatch.
             }
@@ -120,7 +120,7 @@ public final class MotionBus {
         }
         for (Plugin target : new ArrayList<>(ACTION_TARGETS)) {
             try {
-                target.notifyListeners(event, action);
+                notifyPlugin(target, event, action);
             } catch (Exception ignored) {
                 // Listener went away mid-dispatch.
             }
@@ -140,6 +140,14 @@ public final class MotionBus {
     }
 
     /* ---------------------------- Registration ------------------------- */
+
+    private static void notifyPlugin(Plugin target, String event, JSObject data) {
+        try {
+            java.lang.reflect.Method m = Plugin.class.getDeclaredMethod("notifyListeners", String.class, JSObject.class);
+            m.setAccessible(true);
+            m.invoke(target, event, data);
+        } catch (Exception e) {}
+    }
 
     public static synchronized void registerIntents(Plugin plugin) {
         if (!INTENT_TARGETS.contains(plugin)) INTENT_TARGETS.add(plugin);

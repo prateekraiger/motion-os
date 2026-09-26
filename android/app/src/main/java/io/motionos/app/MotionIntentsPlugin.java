@@ -35,7 +35,7 @@ public class MotionIntentsPlugin extends Plugin {
     @Override
     protected void handleOnNewIntent(Intent intent) {
         super.handleOnNewIntent(intent);
-        JSObject parsed = MotionIntents.parseIntent(getContext(), intent);
+        JSObject parsed = MotionIntentsPlugin.parseIntent(getContext(), intent);
         if (parsed != null) MotionBus.postIntent(getContext(), parsed);
     }
 

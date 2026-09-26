@@ -218,7 +218,7 @@ public class MotionNotificationsPlugin extends Plugin {
         intent.putExtra(NotificationActionReceiver.EXTRA_ID, id);
         intent.putExtra(NotificationActionReceiver.EXTRA_TITLE, title);
         intent.putExtra(NotificationActionReceiver.EXTRA_BODY, body);
-        intent.putExtra(NotificationActionReceiver.EXTRA_AT, (long) at);
+        intent.putExtra(NotificationActionReceiver.EXTRA_AT, at.longValue());
 
         PendingIntent pending = PendingIntent.getBroadcast(
                 getContext(), reminderRequestCode(id), intent, PendingIntent.FLAG_UPDATE_CURRENT | immutable());
